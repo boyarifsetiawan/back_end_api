@@ -5,26 +5,21 @@ namespace App\Services;
 
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
+use App\Http\Requests\RegisterRequest;
 use Illuminate\Support\Facades\Storage;
-
+use Symfony\Component\HttpFoundation\Request;
 
 class AuthService
 {
 
-    public function register(object $request): User
+    public function register(RegisterRequest $request): User
 
     {
         $imagePath = null;
 
-        // 2. Penanganan Upload Gambar Profil (Jika Ada)
         if ($request->hasFile('image')) {
-            // Path penyimpanan yang lebih spesifik untuk user
             $path = 'user_profiles';
-
-            // Menyimpan file ke disk 'public' dan mengembalikan path lengkap
-            // Laravel secara otomatis menghasilkan nama file yang unik
             $imagePath = $request->file('image')->store($path, 'public');
-            // $imagePath akan berisi sesuatu seperti: 'user_profiles/namaunik.jpg'
         }
 
         $user = User::create([
@@ -35,9 +30,6 @@ class AuthService
             'password' => Hash::make($request->password),
             'gender' => $request->gender
         ]);
-
-        // Send Verification Code
-        // $this->otp($user);
 
         return $user;
     }

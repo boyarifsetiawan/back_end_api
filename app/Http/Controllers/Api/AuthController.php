@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Services\AuthService;
 use Illuminate\Http\Response;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\RegisterRequest;
 use App\Http\Resources\UserResource;
 
 class AuthController extends Controller
@@ -159,26 +160,13 @@ class AuthController extends Controller
      *     )
      * )
      */
-    public function register(Request $request)
+    public function register(RegisterRequest $request)
     {
-        // validate request
-        $request->validate([
-            'first_name' => 'required|string|max:255',
-            'last_name' => 'required|string|max:255',
-            'gender' => 'required|int|max:255',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
-            'email' => 'required|email|max:255|unique:users,email',
-            'password' => 'required|min:6|max:255'
-        ]);
 
-
-        // create user
         $user = $this->authService->register($request);
 
-        // create access token
         // $token = $user->createToken('auth')->plainTextToken;
 
-        // return
         return response([
             'message' => 'Registration Successful!',
             'results' => [
@@ -189,13 +177,10 @@ class AuthController extends Controller
     }
 
 
-
-
     public function logout(Request $request): Response
     {
         $request->user()->currentAccessToken()->delete();
 
-        // return
         return response([
             'message' => 'Logout success',
         ]);
