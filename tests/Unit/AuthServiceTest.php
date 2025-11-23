@@ -75,4 +75,54 @@ class AuthServiceTest extends TestCase
             'email' => 'jane@example.com'
         ]);
     }
+
+    public function test_it_returns_user_when_credential_are_correct()
+    {
+        //Arrange
+        $user = User::factory()->create([
+            'email' => 'test@example.com',
+            'password' => Hash::make('password123'),
+        ]);
+
+        $request = (object)[
+            'email' => 'test@example.com',
+            'password' => 'password123'
+        ];
+
+        // Act
+        $result = $this->service->login($request);
+
+        // Assert
+        $this->assertInstanceOf(User::class, $result);
+        $this->assertEquals($user->id, $result->id);
+    }
+
+    public function test_it_returns_null_when_password_is_wrong()
+    {
+        User::factory()->create([
+            'email' => 'test@example.com',
+            'password' => Hash::make('correctpass'),
+        ]);
+
+        $request = (object)[
+            'email' => 'test@example.com',
+            'password' => 'wrongpass'
+        ];
+
+        $result = $this->service->login($request);
+
+        $this->assertNull($result);
+    }
+
+    public function test_it_returns_null_when_email_not_found()
+    {
+        $request = (object)[
+            'email' => 'notfound@example.com',
+            'password' => 'anything'
+        ];
+
+        $result = $this->service->login($request);
+
+        $this->assertNull($result);
+    }
 }
