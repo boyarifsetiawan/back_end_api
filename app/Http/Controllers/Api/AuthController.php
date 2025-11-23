@@ -5,9 +5,10 @@ namespace App\Http\Controllers\Api;
 use Illuminate\Http\Request;
 use App\Services\AuthService;
 use Illuminate\Http\Response;
+use App\Http\Requests\LoginRequest;
 use App\Http\Controllers\Controller;
-use App\Http\Requests\RegisterRequest;
 use App\Http\Resources\UserResource;
+use App\Http\Requests\RegisterRequest;
 
 class AuthController extends Controller
 {
@@ -67,13 +68,9 @@ class AuthController extends Controller
      * @param \Illuminate\Http\Request $request Incoming request containing 'email' and 'password'.
      * @return \Illuminate\Http\JsonResponse JSON response with token on success or error message on failure.
      */
-    public function login(Request $request)
+    public function login(LoginRequest $request)
     {
-        // validate request
-        $request->validate([
-            'email' => 'required|email|max:255',
-            'password' => 'required|min:6|max:255'
-        ]);
+
 
         // login user
         $user = $this->authService->login($request);
