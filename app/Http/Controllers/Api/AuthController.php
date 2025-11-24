@@ -20,17 +20,27 @@ class AuthController extends Controller
     }
 
     /**
+     * Handle user login.
+     *
+     * Validates the incoming request, attempts to authenticate the user and returns a JSON response
+     * that includes the authenticated user and an authentication token.
+     *
+     * @param \Illuminate\Http\Request $request
+     * @return \Illuminate\Http\JsonResponse
+     *
+     * @throws \Illuminate\Validation\ValidationException
+     *
      * @OA\Post(
      *     path="/login",
+     *     summary="Login a user",
+     *     description="Authenticates a user and returns user data with an authentication token.",
      *     tags={"Auth"},
-     *     summary="Authenticate a user and issue an access token",
-     *     description="Validates user credentials and returns a JSON response containing an access token, token type and expiration time. Intended for API clients to authenticate and receive a bearer token.",
      *     @OA\RequestBody(
      *         required=true,
      *         @OA\JsonContent(
      *             required={"email","password"},
-     *             @OA\Property(property="email", type="string", format="email", example="user@example.com", description="User email address"),
-     *             @OA\Property(property="password", type="string", format="password", example="secret", description="User password")
+     *             @OA\Property(property="email", type="string", format="email", example="user@example.com"),
+     *             @OA\Property(property="password", type="string", format="password", example="secret")
      *         )
      *     ),
      *     @OA\Response(
@@ -70,15 +80,18 @@ class AuthController extends Controller
      */
     public function login(LoginRequest $request)
     {
-
-
-        // login user
-        $user = $this->authService->login($request);
-
-        if (!$user) {
+        try {
+            $user = $this->authService->login($request->validated());
+            if (!$user) {
+                return response([
+                    'message' => 'These credentials do not match our records.',
+                ], 401);
+            }
+        } catch (\Throwable $th) {
             return response([
-                'message' => 'These credentials do not match our records.',
-            ], 401);
+                'message' => 'Login Failed!',
+                'error' => $th->getMessage()
+            ], 500);
         }
 
         // create access token
@@ -100,7 +113,7 @@ class AuthController extends Controller
      * Handle user registration.
      *
      * Validates the incoming request, creates a new user and returns a JSON response
-     * that includes the newly created user and an authentication token.
+     * that includes the created user.
      *
      * @param \Illuminate\Http\Request $request
      * @return \Illuminate\Http\JsonResponse
@@ -110,70 +123,77 @@ class AuthController extends Controller
      * @OA\Post(
      *     path="/register",
      *     summary="Register a new user",
-     *     description="Creates a new user account and returns user data with an authentication token.",
+     *     description="Creates a new user and returns the user data.",
      *     tags={"Auth"},
      *     @OA\RequestBody(
      *         required=true,
      *         @OA\JsonContent(
-     *             required={"name","email","password","password_confirmation"},
-     *             @OA\Property(property="name", type="string", example="John Doe"),
-     *             @OA\Property(property="email", type="string", format="email", example="john@example.com"),
-     *             @OA\Property(property="password", type="string", format="password", example="P@ssw0rd!"),
-     *             @OA\Property(property="password_confirmation", type="string", format="password", example="P@ssw0rd!")
-     *         )
-     *     ),
-     *     @OA\Response(
-     *         response=201,
-     *         description="User registered successfully",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="success", type="boolean", example=true),
-     *             @OA\Property(property="data", type="object",
-     *                 @OA\Property(property="user", type="object",
-     *                     @OA\Property(property="id", type="integer", example=1),
-     *                     @OA\Property(property="name", type="string", example="John Doe"),
-     *                     @OA\Property(property="email", type="string", format="email", example="john@example.com"),
-     *                     @OA\Property(property="created_at", type="string", format="date-time", example="2025-01-01T12:00:00Z")
-     *                 ),
-     *                 @OA\Property(property="token", type="string", example="eyJ0eXAiOiJKV1QiLCJhbGciOiJI...")
-     *             )
-     *         )
-     *     ),
-     *     @OA\Response(
-     *         response=422,
-     *         description="Validation failed",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="success", type="boolean", example=false),
-     *             @OA\Property(property="message", type="string", example="The given data was invalid."),
-     *             @OA\Property(property="errors", type="object", description="Validation errors keyed by field")
-     *         )
-     *     ),
-     *     @OA\Response(
-     *         response=500,
-     *         description="Server error",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="success", type="boolean", example=false),
-     *             @OA\Property(property="message", type="string", example="An unexpected error occurred.")
+     *             required={"first_name","last_name","email","password","gender"},
+     *             @OA\Property(property="first_name", type="string", example="John"),
+     *             @OA\Property(property="last_name", type="string", example="Doe"),
+     *             @OA\Property(property="email", type="string", format="email", example="john.doe@example.com"),
+     *             @OA\Property(property="password", type="string", format="password", example="password123"),
+     *             @OA\Property(property="gender", type="string", example="male")
      *         )
      *     )
      * )
+     * @param \Illuminate\Http\Request $request
+     * @return \Illuminate\Http\JsonResponse
      */
     public function register(RegisterRequest $request)
     {
 
-        $user = $this->authService->register($request);
-
-        // $token = $user->createToken('auth')->plainTextToken;
+        try {
+            $user = $this->authService->register($request->validated());
+        } catch (\Throwable $th) {
+            return response([
+                'message' => 'Registration Failed!',
+                'error' => $th->getMessage()
+            ], 500);
+        }
 
         return response([
             'message' => 'Registration Successful!',
             'results' => [
                 'user' => new UserResource($user),
-                // 'token' => $token
             ]
         ], 201);
     }
 
-
+    /**
+     * Handle user logout.
+     *
+     * Revokes the current user's authentication token and returns a JSON response
+     * indicating successful logout.
+     *
+     * @param \Illuminate\Http\Request $request
+     * @return \Illuminate\Http\Response
+     *
+     * @OA\Post(
+     *     path="/logout",
+     *     summary="Logout the authenticated user",
+     *     description="Revokes the current user's authentication token.",
+     *     tags={"Auth"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Response(
+     *         response=200,
+     *         description="Successful logout",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Logout success")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=401,
+     *         description="Unauthorized",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Unauthenticated.")
+     *         )
+     *     )
+     * )
+     *
+     * @param \Illuminate\Http\Request $request Incoming request from the authenticated user.
+     * @return \Illuminate\Http\Response JSON response indicating logout status.
+     */
     public function logout(Request $request): Response
     {
         $request->user()->currentAccessToken()->delete();

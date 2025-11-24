@@ -6,41 +6,42 @@ namespace App\Services;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 use App\Http\Requests\RegisterRequest;
+use App\Interface\AuthenticationRepositoryInterface;
+use App\Repositories\AuthRepositoryImpl;
+use Exception;
 use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\Request;
 
 class AuthService
 {
+    protected $authRepository;
 
-    public function register(RegisterRequest $request): User
-
+    public function __construct(AuthenticationRepositoryInterface $authRepository)
     {
-        $imagePath = null;
+        $this->authRepository = $authRepository;
+    }
 
-        if ($request->hasFile('image')) {
-            $path = 'user_profiles';
-            $imagePath = $request->file('image')->store($path, 'public');
+    public function register(array $request): User
+    {
+        try {
+            $user = $this->authRepository->create($request);
+        } catch (\Throwable $th) {
+            throw new Exception($th->getMessage());
         }
-
-        $user = User::create([
-            'first_name' => $request->first_name,
-            'last_name' => $request->last_name,
-            'email' => $request->email,
-            'image' => $imagePath,
-            'password' => Hash::make($request->password),
-            'gender' => $request->gender
-        ]);
 
         return $user;
     }
 
-    public function login(object $request): ?User
+    public function login(array $request): ?User
     {
-        $user = User::where('email', $request->email)->first();
-        if ($user && Hash::check($request->password, $user->password)) {
-            return $user;
+        try {
+            $user = $this->authRepository->findByEmail($request['email']);
+            if ($user && Hash::check($request['password'], $user->password)) {
+                return $user;
+            }
+        } catch (\Throwable $th) {
+            throw new Exception($th->getMessage());
         }
-
         return null;
     }
 

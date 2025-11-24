@@ -35,8 +35,8 @@ class ProductResource extends JsonResource
             'price' => $this->price,
             'sales_number' => $this->sales_number,
             'discounted_price' => $this->discounted_price,
-            'created_at' => $this->created_at->format('d M Y, h:i A'),
-            'updated_at' => $this->updated_at->format('d M Y, h:i A'),
+            'created_at' => $this->created_at,
+            'updated_at' => $this->updated_at,
             'category' => $this->whenLoaded('category', function () {
                 return new CategoryResource($this->category);
             }),

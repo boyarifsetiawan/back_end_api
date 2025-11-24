@@ -2,24 +2,19 @@
 
 namespace App\Http\Controllers\Ecommerce;
 
-use App\Models\User;
-use App\Models\Product;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\ProductResource;
-use App\Repositories\ProductRepository;
-use Illuminate\Support\Facades\Storage;
-
-use function PHPUnit\Framework\isEmpty;
+use App\Services\ProductService;
 
 class ProductController extends Controller
 {
 
-    protected $repo;
-    public function __construct(ProductRepository $repo)
+    protected $productService;
+    public function __construct(ProductService $productService)
     {
-        $this->repo = $repo;
+        $this->productService = $productService;
     }
 
     /**
@@ -27,7 +22,7 @@ class ProductController extends Controller
      *     path="/get-top-selling",
      *     tags={"Product"},
      *     summary="Get top selling products",
-     *     description="Mengambil daftar produk dengan penjualan terbanyak.",
+     *     description="Mengambil daftar produk terlaris berdasarkan penjualan.",
      *     security={{"bearerAuth": {}}},
      *
      *     @OA\Response(
@@ -52,13 +47,27 @@ class ProductController extends Controller
      *     )
      * )
      */
-    public function getTopSelling()
+    public function getTopSelling(Request $request)
     {
-        return response([
-            'message' => 'Success',
-            'results' => ProductResource::collection($this->repo->productTopSelling())
+        $userId = $request->user()->id;
+        try {
+            $products = $this->productService->productTopSelling($userId);
 
-        ], 200);
+            return response()->json([
+                'message' => 'Success',
+                'results' => ProductResource::collection($products)
+            ], 200);
+        } catch (\Exception $e) {
+            Log::error("Error fetching top selling products: " . $e->getMessage(), [
+                'file' => $e->getFile(),
+                'line' => $e->getLine()
+            ]);
+
+            return response()->json([
+                'message' => 'Internal Server Error: Failed to fetch top selling products.',
+                'error_code' => $e->getCode()
+            ], 500);
+        }
     }
 
 
@@ -66,7 +75,7 @@ class ProductController extends Controller
      * @OA\Get(
      *     path="/get-new-in",
      *     tags={"Product"},
-     *     summary="Get newly added products",
+     *     summary="Get new in products",
      *     description="Mengambil daftar produk terbaru yang baru saja ditambahkan.",
      *     security={{"bearerAuth": {}}},
      *
@@ -95,11 +104,24 @@ class ProductController extends Controller
     public function getNewIn()
     {
 
-        return response([
-            'message' => 'Success',
-            'results' => ProductResource::collection($this->repo->productNewIn())
+        try {
+            $products = $this->productService->productNewIn();
 
-        ], 200);
+            return response()->json([
+                'message' => 'Success',
+                'results' => ProductResource::collection($products)
+            ], 200);
+        } catch (\Exception $e) {
+            Log::error("Error fetching new in products: " . $e->getMessage(), [
+                'file' => $e->getFile(),
+                'line' => $e->getLine()
+            ]);
+
+            return response()->json([
+                'message' => 'Internal Server Error: Failed to fetch new in products.',
+                'error_code' => $e->getCode()
+            ], 500);
+        }
     }
 
 
@@ -108,42 +130,32 @@ class ProductController extends Controller
      * @OA\Post(
      *     path="/toggle-favorite",
      *     tags={"Product"},
-     *     summary="Toggle product favorite status",
-     *     description="Menambahkan atau menghapus produk dari daftar favorit user berdasarkan product_id.",
+     *     summary="Toggle favorite status for a product",
+     *     description="Menandai atau menghapus tanda favorit pada produk tertentu untuk user yang sedang login.",
      *     security={{"bearerAuth": {}}},
      *
      *     @OA\RequestBody(
      *         required=true,
-     *         description="Payload untuk toggle favorit",
      *         @OA\JsonContent(
-     *             type="object",
-     *             @OA\Property(property="product_id", type="integer", example=7)
-     *         )
-     *     ),
-     *
-     *     @OA\Response(
-     *         response=201,
-     *         description="Produk berhasil ditambahkan ke favorit",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="message", type="string", example="Produk berhasil ditambahkan ke favorit."),
-     *             @OA\Property(property="status", type="boolean", example=true)
+     *             required={"product_id"},
+     *             @OA\Property(property="product_id", type="integer", example=1, description="ID produk yang akan ditandai atau dihapus dari favorit")
      *         )
      *     ),
      *
      *     @OA\Response(
      *         response=200,
-     *         description="Produk berhasil dihapus dari favorit / tidak ada perubahan",
+     *         description="Berhasil mengubah status favorit produk",
      *         @OA\JsonContent(
-     *             @OA\Property(property="message", type="string", example="Produk berhasil dihapus dari favorit."),
-     *             @OA\Property(property="status", type="boolean", example=false)
+     *             @OA\Property(property="message", type="string", example="Produk berhasil ditambahkan ke favorit."),
+     *             @OA\Property(property="status", type="boolean", example=true, description="Status favorit produk setelah toggle (true: ditandai sebagai favorit, false: dihapus dari favorit)")
      *         )
      *     ),
      *
      *     @OA\Response(
      *         response=422,
-     *         description="Validasi gagal",
+     *         description="Validation Error",
      *         @OA\JsonContent(
-     *             @OA\Property(property="message", type="string", example="The product_id field is required.")
+     *             @OA\Property(property="message", type="string", example="Validation Error: The product_id field is required.")
      *         )
      *     ),
      *
@@ -158,41 +170,47 @@ class ProductController extends Controller
      */
     public function toggleFavorite(Request $request)
     {
-        // 1. Validasi Input (opsional, tapi disarankan)
-        $validated = $request->validate([
-            'product_id' => 'required|exists:products,id',
-        ]);
-
         $userId = $request->user()->id;
-        $productId = $validated['product_id'];
+        $productId = $request->input('product_id');
 
-        $toggleResult = $this->repo->toggleFavorite($productId, $userId);
-
-        if (!empty($toggleResult['attached'])) {
-
-            $message = 'Produk berhasil ditambahkan ke favorit.';
-            $status = true;
-            $statusCode = 201; // Created
-
-        }
-        // Jika 'detached' tidak kosong, berarti produk DIHAPUS dari favorit.
-        elseif (!empty($toggleResult['detached'])) {
-
-            $message = 'Produk berhasil dihapus dari favorit.';
-            $status = false;
-            $statusCode = 200; // OK
-
-        } else {
-            // Kasus jarang, jika tidak ada perubahan
-            $message = 'Tidak ada perubahan pada daftar favorit.';
-            $statusCode = 200;
+        if (empty($productId)) {
+            return response()->json([
+                'message' => 'Validation Error: The product_id field is required.'
+            ], 422);
         }
 
-        // 6. Kembalikan Response JSON
-        return response()->json([
-            'message' => $message,
-            'status' => $status
-        ], $statusCode);
+        try {
+            $result = $this->productService->toggleFavorite($productId, $userId);
+
+            if (isset($result['attached']) && count($result['attached']) > 0) {
+                return response()->json([
+                    'message' => 'Produk berhasil ditambahkan ke favorit.',
+                    'status' => true
+                ], 201);
+            } elseif (isset($result['detached']) && count($result['detached']) > 0) {
+                return response()->json([
+                    'message' => 'Produk berhasil dihapus dari favorit.',
+                    'status' => false
+                ], 200);
+            } else {
+                return response()->json([
+                    'message' => 'Tidak ada perubahan pada status favorit produk.',
+                    'status' => null
+                ], 200);
+            }
+        } catch (\Exception $e) {
+            Log::error("Error toggling favorite status: " . $e->getMessage(), [
+                'product_id' => $productId,
+                'user_id' => $userId,
+                'file' => $e->getFile(),
+                'line' => $e->getLine()
+            ]);
+
+            return response()->json([
+                'message' => 'Internal Server Error: Failed to toggle favorite status.',
+                'error_code' => $e->getCode()
+            ], 500);
+        }
     }
 
 
@@ -200,15 +218,15 @@ class ProductController extends Controller
      * @OA\Get(
      *     path="/get-favorite-products",
      *     tags={"Product"},
-     *     summary="Get all favorited products",
-     *     description="Mengambil semua produk yang telah ditandai sebagai favorit oleh user.",
+     *     summary="Get favorite products of the authenticated user",
+     *     description="Mengambil daftar produk favorit dari user yang sedang login.",
      *     security={{"bearerAuth": {}}},
      *
      *     @OA\Response(
      *         response=200,
      *         description="Berhasil mengambil daftar produk favorit",
      *         @OA\JsonContent(
-     *             @OA\Property(property="message", type="string", example="Get Favorites Products Successfuly"),
+     *             @OA\Property(property="message", type="string", example="Get Favorites Products Successfully"),
      *             @OA\Property(
      *                 property="results",
      *                 type="array",
@@ -229,12 +247,26 @@ class ProductController extends Controller
     public function getFavoriteProducts(Request $request)
     {
         $userId = $request->user()->id;
-        $products = $this->repo->getFavoriteProducts($userId);
 
-        return response()->json([
-            'message' => 'Get Favorites Products Successfuly',
-            'results' => ProductResource::collection($products)
-        ], 200);
+        try {
+            $products = $this->productService->getFavoriteProducts($userId);
+
+            return response()->json([
+                'message' => 'Get Favorites Products Successfuly',
+                'results' => ProductResource::collection($products)
+            ], 200);
+        } catch (\Exception $e) {
+            Log::error("Error fetching favorite products: " . $e->getMessage(), [
+                'user_id' => $userId,
+                'file' => $e->getFile(),
+                'line' => $e->getLine()
+            ]);
+
+            return response()->json([
+                'message' => 'Internal Server Error: Failed to fetch favorite products.',
+                'error_code' => $e->getCode()
+            ], 500);
+        }
     }
 
 
@@ -243,22 +275,35 @@ class ProductController extends Controller
      *     path="/get-products-byid-category",
      *     tags={"Product"},
      *     summary="Get products by category ID",
-     *     description="Mengambil daftar produk berdasarkan ID kategori yang dikirimkan melalui query parameter.",
+     *     description="Mengambil daftar produk berdasarkan kategori yang dikirim melalui query parameter.",
      *     security={{"bearerAuth": {}}},
-     *
+     *     *
      *     @OA\Parameter(
      *         name="query_params",
      *         in="query",
      *         required=true,
-     *         description="ID kategori untuk mengambil daftar produk",
-     *         @OA\Schema(type="integer", example=3)
+     *         description="ID kategori produk",
+     *         @OA\Schema(type="integer", example=1)
      *     ),
      *
      *     @OA\Response(
      *         response=200,
-     *         description="Berhasil mengambil daftar produk",
+     *         description="Produk ditemukan",
      *         @OA\JsonContent(
      *             @OA\Property(property="message", type="string", example="Get Products Successfuly"),
+     *             @OA\Property(
+     *                 property="results",
+     *                 type="array",
+     *                 @OA\Items(ref="#/components/schemas/Product")
+     *             )
+     *         )
+     *     ),
+     *
+     *     @OA\Response(
+     *         response=404,
+     *         description="Produk tidak ditemukan",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Product Not Found"),
      *             @OA\Property(
      *                 property="results",
      *                 type="array",
@@ -279,12 +324,25 @@ class ProductController extends Controller
     public function getProductsByIdCategory(Request $request)
     {
         $categoryId = $request->query('query_params');
-        $products = $this->repo->getProductsByIdCategory($categoryId);
+        try {
+            $products = $this->productService->getProductsByIdCategory($categoryId);
 
-        return response()->json([
-            'message' => 'Get Products Successfuly',
-            'results' => ProductResource::collection($products)
-        ], 200);
+            return response()->json([
+                'message' => 'Get Products Successfuly',
+                'results' => ProductResource::collection($products)
+            ], 200);
+        } catch (\Exception $e) {
+            Log::error("Error fetching products by category ID: " . $e->getMessage(), [
+                'category_id' => $categoryId,
+                'file' => $e->getFile(),
+                'line' => $e->getLine()
+            ]);
+
+            return response()->json([
+                'message' => 'Internal Server Error: Failed to fetch products by category ID.',
+                'error_code' => $e->getCode()
+            ], 500);
+        }
     }
 
 
@@ -292,16 +350,16 @@ class ProductController extends Controller
      * @OA\Get(
      *     path="/get-products-by-title",
      *     tags={"Product"},
-     *     summary="Get products by title keyword",
-     *     description="Mengambil daftar produk berdasarkan pencarian judul (title) yang dikirim melalui query parameter.",
+     *     summary="Get products by title",
+     *     description="Mengambil daftar produk berdasarkan judul yang dikirim melalui query parameter.",
      *     security={{"bearerAuth": {}}},
      *
      *     @OA\Parameter(
      *         name="query_params",
      *         in="query",
      *         required=true,
-     *         description="Keyword atau title produk yang ingin dicari",
-     *         @OA\Schema(type="string", example="Air Jordan")
+     *         description="Judul produk",
+     *         @OA\Schema(type="string", example="Sneakers")
      *     ),
      *
      *     @OA\Response(
@@ -342,18 +400,24 @@ class ProductController extends Controller
     public function getProductsByTitle(Request $request)
     {
         $title = $request->query('query_params');
-        $products = $this->repo->getProductsByIdTitle($title);
+        try {
+            $products = $this->productService->getProductsByTitle($title);
 
-        if (isEmpty($products)) {
             return response()->json([
-                'message' => 'Product Not Found',
+                'message' => 'Get Products Successfully',
                 'results' => ProductResource::collection($products)
-            ], 404);
-        }
+            ], 200);
+        } catch (\Exception $e) {
+            Log::error("Error fetching products by title: " . $e->getMessage(), [
+                'title' => $title,
+                'file' => $e->getFile(),
+                'line' => $e->getLine()
+            ]);
 
-        return response()->json([
-            'message' => 'Get Products Successfuly',
-            'results' => ProductResource::collection($products)
-        ], 200);
+            return response()->json([
+                'message' => 'Internal Server Error: Failed to fetch products by title.',
+                'error_code' => $e->getCode()
+            ], 500);
+        }
     }
 }

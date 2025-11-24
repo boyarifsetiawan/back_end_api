@@ -21,13 +21,21 @@ class ProductFactory extends Factory
     public function definition(): array
     {
         return [
-            // 'category_id' => null,
-            'title' => $this->faker->sentence(3),
-            'price' => $this->faker->randomFloat(2, 10, 500),
-            'discounted_price' => $this->faker->optional()->randomFloat(2, 10, 200),
-            'gender' => $this->faker->numberBetween(0, 1),
-            'sales_number' => $this->faker->numberBetween(0, 1000),
-            'created_at' => $this->faker->dateTimeBetween('-6 months', 'now'),
+            'category_id' => \App\Models\Category::factory(),
+            'title' => fake()->sentence(2),
+            'price' => fake()->randomFloat(2, 100, 500),
+            'discounted_price' => fake()->randomFloat(2, 50, 300),
+            'gender' => fake()->randomElement([0, 1]),
+            'sales_number' => fake()->numberBetween(0, 1000),
         ];
+        // return [
+        //     // 'category_id' => null,
+        //     'title' => $this->faker->sentence(3),
+        //     'price' => $this->faker->randomFloat(2, 10, 500),
+        //     'discounted_price' => $this->faker->optional()->randomFloat(2, 10, 200),
+        //     'gender' => $this->faker->numberBetween(0, 1),
+        //     'sales_number' => $this->faker->numberBetween(0, 1000),
+        //     'created_at' => $this->faker->dateTimeBetween('-6 months', 'now'),
+        // ];
     }
 }
