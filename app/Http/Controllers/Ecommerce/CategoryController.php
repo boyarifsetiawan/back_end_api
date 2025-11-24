@@ -10,29 +10,31 @@ use Illuminate\Http\Request;
 class CategoryController extends Controller
 {
     /**
-     * @OA\Get(
-     *     path="/categories",
-     *     tags={"Category"},
-     *     summary="Get all categories",
-     *     description="Mengambil semua kategori dan mengembalikannya dalam bentuk CategoryResource collection.",
+     * Get all categories.
      *
+     * @OA\Get(
+     *     path="/get-categories",
+     *     summary="Get all categories",
+     *     description="Retrieve a list of all categories.",
+     *     tags={"Categories"},
      *     @OA\Response(
      *         response=200,
-     *         description="Berhasil mengambil daftar kategori",
+     *         description="Successful operation",
      *         @OA\JsonContent(
+     *             type="object",
      *             @OA\Property(property="message", type="string", example="Success"),
      *             @OA\Property(
      *                 property="results",
      *                 type="array",
-     *                 @OA\Items(ref="#/components/schemas/Category")
+     *                 @OA\Items(ref="#/components/schemas/CategoryResource")
      *             )
      *         )
+     *     ),
+     *     @OA\Response(
+     *         response=500,
+     *         description="Internal server error"
      *     )
      * )
-     *
-     * Mengambil semua data kategori.
-     *
-     * @return \Illuminate\Http\JsonResponse
      */
     public function getCategories()
     {

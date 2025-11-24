@@ -4,7 +4,24 @@ namespace App\Http\Resources;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use OpenApi\Attributes as OA;
 
+#[OA\Schema(
+    schema: "CartResource", // <-- Nama Skema yang Benar
+    title: "CartResource Schema",
+    properties: [
+        new OA\Property(property: "id", type: "integer"),
+        new OA\Property(property: "product_id", type: "integer"),
+        new OA\Property(property: "product_title", type: "string"),
+        new OA\Property(property: "product_quantity", type: "integer"),
+        new OA\Property(property: "product_color", type: "string"),
+        new OA\Property(property: "product_size", type: "string"),
+        new OA\Property(property: "product_price", type: "number"),
+        new OA\Property(property: "total_price", type: "number"),
+        new OA\Property(property: "product_image", type: "string"),
+        new OA\Property(property: "created_at", type: "string", format: "date-time"),
+    ]
+)]
 class CartResource extends JsonResource
 {
     /**

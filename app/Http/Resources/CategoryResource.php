@@ -5,7 +5,22 @@ namespace App\Http\Resources;
 use App\Models\Product;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use OpenApi\Attributes as OA;
 
+#[OA\Schema(
+    schema: "CategoryResource", // <-- Nama Skema yang Benar
+    title: "CategoryResource Schema",
+    properties: [
+        new OA\Property(property: "id", type: "integer"),
+        new OA\Property(property: "title", type: "string"),
+        new OA\Property(property: "image", type: "string"),
+        new OA\Property(
+            property: "products",
+            type: "array",
+            items: new OA\Items(ref: "#/components/schemas/ProductResource")
+        ),
+    ]
+)]
 class CategoryResource extends JsonResource
 {
     /**

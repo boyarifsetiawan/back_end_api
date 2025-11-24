@@ -17,41 +17,24 @@ class OrderController extends Controller
     }
 
     /**
+     * Creates New Order
      * @OA\Post(
      *     path="/order-registration",
-     *     tags={"Order"},
      *     summary="Register a new order",
-     *     description="Mendaftarkan pesanan baru berdasarkan data yang dikirimkan user.",
-     *     security={{"bearerAuth": {}}},
-     *
+     *     tags={"Orders"},
+     *     security={{"bearerAuth":{}}},
      *     @OA\RequestBody(
      *         required=true,
-     *         description="Order registration payload",
      *         @OA\JsonContent(
-     *             type="object",
-     *             @OA\Property(property="user_id", type="integer", example=12),
-     *             @OA\Property(property="item_count", type="integer", example=3),
-     *             @OA\Property(property="total_price", type="number", format="float", example=450000),
-     *             @OA\Property(property="shipping_address", type="string", example="Jl. Merdeka No. 123, Jakarta"),
-     *
-     *             @OA\Property(
-     *                 property="products",
-     *                 type="array",
-     *                 @OA\Items(
-     *                     type="object",
-     *                     @OA\Property(property="product_id", type="integer", example=5),
-     *                     @OA\Property(property="title", type="string", example="Nike Air Max 97"),
-     *                     @OA\Property(property="quantity", type="integer", example=2),
-     *                     @OA\Property(property="color", type="string", example="Black"),
-     *                     @OA\Property(property="size", type="string", example="Xl"),
-     *                     @OA\Property(property="product_price", type="number", format="float", example=225000),
-     *                     @OA\Property(property="total_price", type="number", format="float", example=450000),
-     *                     @OA\Property(property="image", type="string", example="https://cdn.example.com/products/airmax.jpg")
-     *                 )
-     *             )
+     *             @OA\Property(property="shipping_address_id", type="integer", example="1"),
+     *             @OA\Property(property="billing_address_id", type="integer", example="2"),
+     *             @OA\Property(property="payment_method", type="string", example="credit_card"),
+     *             @OA\Property(property="products", type="array", @OA\Items(
+     *                 @OA\Property(property="id", type="integer", example="1"),
+     *                 @OA\Property(property="quantity", type="integer", example="2")
+     *              )),
      *         )
      *     ),
-     *
      *     @OA\Response(
      *         response=201,
      *         description="Order created successfully",
@@ -59,13 +42,9 @@ class OrderController extends Controller
      *             @OA\Property(property="message", type="string", example="The Products was ordered successfuly")
      *         )
      *     ),
-     *
      *     @OA\Response(
-     *         response=401,
-     *         description="Unauthorized",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="message", type="string", example="Unauthenticated.")
-     *         )
+     *         response=422,
+     *         description="Validation errors"
      *     )
      * )
      */
@@ -82,67 +61,23 @@ class OrderController extends Controller
     }
 
     /**
+     * Get Orders
      * @OA\Get(
      *     path="/get-orders",
-     *     tags={"Order"},
-     *     summary="Get user's orders",
-     *     description="Mengambil semua pesanan milik user yang sedang login, termasuk statuses dan orderedProducts.",
+     *     summary="Get all orders for the authenticated user",
+     *     tags={"Orders"},
      *     security={{"bearerAuth":{}}},
-     *
      *     @OA\Response(
      *         response=200,
-     *         description="Berhasil mengambil daftar pesanan",
+     *         description="Orders retrieved successfully",
      *         @OA\JsonContent(
      *             @OA\Property(property="message", type="string", example="Get orders successfuly"),
-     *             @OA\Property(
-     *                 property="results",
-     *                 type="array",
-     *                 description="Daftar semua pesanan user",
-     *                 @OA\Items(
-     *                     type="object",
-     *
-     *                     @OA\Property(property="id", type="integer", example=10),
-     *                     @OA\Property(property="user_id", type="integer", example=3),
-     *                     @OA\Property(property="item_count", type="integer", example=5),
-     *                     @OA\Property(property="total_price", type="number", format="float", example=450000),
-     *                     @OA\Property(property="shipping_address", type="string", example="Jl. Merdeka No. 123, Jakarta"),
-     *                     @OA\Property(property="status", type="string", example="processing"),
-     *
-     *                     @OA\Property(
-     *                         property="statuses",
-     *                         type="array",
-     *                         description="Riwayat status order",
-     *                         @OA\Items(
-     *                             type="object",
-     *                             @OA\Property(property="status", type="string", example="processing"),
-     *                             @OA\Property(property="created_at", type="string", example="2025-01-20 14:23:00")
-     *                         )
-     *                     ),
-     *
-     *                     @OA\Property(
-     *                         property="products",
-     *                         type="array",
-     *                         description="Produk yang dipesan",
-     *                         @OA\Items(
-     *                             type="object",
-     *                             @OA\Property(property="product_id", type="integer", example=12),
-     *                             @OA\Property(property="title", type="string", example="Nike Air Max 270"),
-     *                             @OA\Property(property="quantity", type="integer", example=2),
-     *                             @OA\Property(property="color", type="string", example="Black"),
-     *                             @OA\Property(property="size", type="string", example="Xl"),
-     *                             @OA\Property(property="product_price", type="number", format="float", example=150000),
-     *                             @OA\Property(property="total_price", type="number", format="float", example=300000),
-     *                             @OA\Property(property="image", type="string", example="https://example.com/image.jpg")
-     *                         )
-     *                     )
-     *                 )
-     *             )
+     *             @OA\Property(property="results", type="array", @OA\Items(ref="#/components/schemas/OrderResource"))
      *         )
      *     ),
-     *
      *     @OA\Response(
      *         response=401,
-     *         description="Unauthorized - User belum login"
+     *         description="Unauthorized"
      *     )
      * )
      */

@@ -7,7 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use App\Interface\CartRepositoryInterface;
 
-class CartRepository implements CartRepositoryInterface
+class CartRepositoryImpl implements CartRepositoryInterface
 {
     public function addToCart(array $cart, int $userId): Collection
     {

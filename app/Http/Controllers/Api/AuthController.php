@@ -19,44 +19,39 @@ class AuthController extends Controller
         $this->authService = $authService;
     }
 
+
     /**
      * Handle user login.
      *
-     * Validates the incoming request, attempts to authenticate the user and returns a JSON response
-     * that includes the authenticated user and an authentication token.
-     *
-     * @param \Illuminate\Http\Request $request
-     * @return \Illuminate\Http\JsonResponse
-     *
-     * @throws \Illuminate\Validation\ValidationException
-     *
      * @OA\Post(
      *     path="/login",
-     *     summary="Login a user",
-     *     description="Authenticates a user and returns user data with an authentication token.",
+     *     summary="Logs in an existing user",
+     *     description="Logs in an existing user and returns a token.",
      *     tags={"Auth"},
      *     @OA\RequestBody(
      *         required=true,
      *         @OA\JsonContent(
      *             required={"email","password"},
-     *             @OA\Property(property="email", type="string", format="email", example="user@example.com"),
-     *             @OA\Property(property="password", type="string", format="password", example="secret")
+     *             @OA\Property(property="email", type="string", format="email", example="john.doe@example.com"),
+     *             @OA\Property(property="password", type="string", format="password", example="password123")
      *         )
      *     ),
      *     @OA\Response(
      *         response=200,
-     *         description="Successful authentication",
+     *         description="Successful login",
      *         @OA\JsonContent(
-     *             @OA\Property(property="access_token", type="string", example="eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiIs..."),
-     *             @OA\Property(property="token_type", type="string", example="Bearer"),
-     *             @OA\Property(property="expires_in", type="integer", example=3600)
+     *             @OA\Property(property="message", type="string", example="Login Successful!"),
+     *             @OA\Property(property="results", type="object",
+     *                 @OA\Property(property="user", ref="#/components/schemas/UserResource"),
+     *                 @OA\Property(property="token", type="string", example="your_auth_token")
+     *             )
      *         )
      *     ),
      *     @OA\Response(
      *         response=401,
-     *         description="Authentication failed due to invalid credentials",
+     *         description="Invalid credentials",
      *         @OA\JsonContent(
-     *             @OA\Property(property="message", type="string", example="Invalid credentials")
+     *             @OA\Property(property="message", type="string", example="These credentials do not match our records.")
      *         )
      *     ),
      *     @OA\Response(
@@ -70,13 +65,18 @@ class AuthController extends Controller
      *                 description="Validation error details"
      *             )
      *         )
+     *     ),
+     *     @OA\Response(
+     *         response=500,
+     *         description="Server error",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Login Failed!"),
+     *             @OA\Property(property="error", type="string", example="Error message")
+     *         )
      *     )
      * )
-     *
-     * Handle user authentication request.
-     *
-     * @param \Illuminate\Http\Request $request Incoming request containing 'email' and 'password'.
-     * @return \Illuminate\Http\JsonResponse JSON response with token on success or error message on failure.
+     * @param LoginRequest $request
+     * @return \Illuminate\Http\JsonResponse
      */
     public function login(LoginRequest $request)
     {
@@ -104,7 +104,7 @@ class AuthController extends Controller
                 'user' => new UserResource($user),
                 'token' => $token
             ]
-        ], 201);
+        ], 200);
     }
 
 
@@ -112,32 +112,53 @@ class AuthController extends Controller
     /**
      * Handle user registration.
      *
-     * Validates the incoming request, creates a new user and returns a JSON response
-     * that includes the created user.
-     *
-     * @param \Illuminate\Http\Request $request
-     * @return \Illuminate\Http\JsonResponse
-     *
-     * @throws \Illuminate\Validation\ValidationException
-     *
      * @OA\Post(
      *     path="/register",
-     *     summary="Register a new user",
-     *     description="Creates a new user and returns the user data.",
+     *     summary="Registers a new user",
+     *     description="Registers a new user and returns the user object.",
      *     tags={"Auth"},
      *     @OA\RequestBody(
      *         required=true,
      *         @OA\JsonContent(
-     *             required={"first_name","last_name","email","password","gender"},
-     *             @OA\Property(property="first_name", type="string", example="John"),
-     *             @OA\Property(property="last_name", type="string", example="Doe"),
+     *             required={"name", "email","password", "password_confirmation"},
+     *             @OA\Property(property="name", type="string", example="John Doe"),
      *             @OA\Property(property="email", type="string", format="email", example="john.doe@example.com"),
      *             @OA\Property(property="password", type="string", format="password", example="password123"),
-     *             @OA\Property(property="gender", type="string", example="male")
+     *             @OA\Property(property="password_confirmation", type="string", format="password", example="password123")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=201,
+     *         description="Successful registration",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Registration Successful!"),
+     *             @OA\Property(property="results", type="object",
+     *                 @OA\Property(property="user", ref="#/components/schemas/UserResource")
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=422,
+     *         description="Validation error",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="The given data was invalid."),
+     *             @OA\Property(
+     *                 property="errors",
+     *                 type="object",
+     *                 description="Validation error details"
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=500,
+     *         description="Server error",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Registration Failed!"),
+     *             @OA\Property(property="error", type="string", example="Error message")
      *         )
      *     )
      * )
-     * @param \Illuminate\Http\Request $request
+     * @param RegisterRequest $request
      * @return \Illuminate\Http\JsonResponse
      */
     public function register(RegisterRequest $request)

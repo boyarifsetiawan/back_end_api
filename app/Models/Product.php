@@ -5,21 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
-use OpenApi\Attributes as OA;
 
-#[OA\Schema(
-    schema: "Product", // <-- Nama Skema yang Benar
-    title: "Product Schema",
-    properties: [
-        new OA\Property(property: "category_id", type: "integer"),
-        new OA\Property(property: "discounted_price", type: "float"),
-        new OA\Property(property: "gender", type: "string"),
-        new OA\Property(property: "price", type: "folat"),
-        new OA\Property(property: "sales_number", type: "integer"),
-        new OA\Property(property: "title", type: "string"),
-        // ... properti lainnya
-    ]
-)]
 class Product extends Model
 {
     use HasFactory;

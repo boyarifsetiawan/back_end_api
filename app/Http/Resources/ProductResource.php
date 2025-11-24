@@ -9,6 +9,43 @@ use App\Http\Resources\ProductColorsResource;
 use App\Http\Resources\ProductImagesResource;
 use Illuminate\Http\Resources\Json\JsonResource;
 
+
+use OpenApi\Attributes as OA;
+
+#[OA\Schema(
+    schema: "ProductResource", // <-- Nama Skema yang Benar
+    title: "ProductResource Schema",
+    properties: [
+        new OA\Property(property: "id", type: "integer"),
+        new OA\Property(property: "category_id", type: "integer"),
+        new OA\Property(property: "discounted_price", type: "float"),
+        new OA\Property(property: "gender", type: "string"),
+        new OA\Property(property: "price", type: "float"),
+        new OA\Property(property: "sales_number", type: "integer"),
+        new OA\Property(property: "title", type: "string"),
+        new OA\Property(property: "created_at", type: "string", format: "date-time"),
+        new OA\Property(property: "updated_at", type: "string", format: "date-time"),
+        new OA\Property(
+            property: "category",
+            ref: "#/components/schemas/CategoryResource"
+        ),
+        new OA\Property(
+            property: "images",
+            type: "array",
+            items: new OA\Items(ref: "#/components/schemas/ProductImagesResource")
+        ),
+        new OA\Property(
+            property: "colors",
+            type: "array",
+            items: new OA\Items(ref: "#/components/schemas/ProductColorsResource")
+        ),
+        new OA\Property(
+            property: "sizes",
+            type: "array",
+            items: new OA\Items(ref: "#/components/schemas/ProductSizeResource")
+        ),
+    ]
+)]
 class ProductResource extends JsonResource
 {
     /**
@@ -18,15 +55,6 @@ class ProductResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
-        // 1. Dapatkan base URL dari aplikasi Laravel Anda (misalnya http://127.0.0.1:8000)
-        $baseUrl = config('app.url'); // Pastikan APP_URL di .env sudah benar
-
-        // 2. Map array nama file menjadi URL penuh
-        $fullImageUrls = collect($this->images)->map(function ($fileName) use ($baseUrl) {
-            // Menggunakan helper asset() atau URL::asset() di sini adalah praktik yang baik
-            // Namun, untuk akses dari Flutter, kita konstruksi manual lebih sederhana:
-            return "$baseUrl/storage/products/$fileName";
-        });
 
         return [
             'id' => $this->id,

@@ -8,22 +8,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 
-use OpenApi\Attributes as OA;
 
-
-#[OA\Schema(
-    schema: "Auth", // <-- Nama Skema yang Benar
-    title: "Authentication Schema",
-    properties: [
-        new OA\Property(property: "first_name", type: "string"),
-        new OA\Property(property: "last_name", type: "string"),
-        new OA\Property(property: "email", type: "string"),
-        new OA\Property(property: "password", type: "string"),
-        new OA\Property(property: "image", type: "string"),
-        new OA\Property(property: "gender", type: "number"),
-        // ... properti lainnya
-    ]
-)]
 class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */

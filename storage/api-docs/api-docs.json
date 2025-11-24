@@ -17,8 +17,8 @@
                 "tags": [
                     "Auth"
                 ],
-                "summary": "Authenticate a user and issue an access token",
-                "description": "Validates user credentials and returns a JSON response containing an access token, token type and expiration time. Intended for API clients to authenticate and receive a bearer token.",
+                "summary": "Logs in an existing user",
+                "description": "Logs in an existing user and returns a token.",
                 "operationId": "67d6d0fdd54fba132e1b6f55ca254183",
                 "requestBody": {
                     "required": true,
@@ -31,16 +31,14 @@
                                 ],
                                 "properties": {
                                     "email": {
-                                        "description": "User email address",
                                         "type": "string",
                                         "format": "email",
-                                        "example": "user@example.com"
+                                        "example": "john.doe@example.com"
                                     },
                                     "password": {
-                                        "description": "User password",
                                         "type": "string",
                                         "format": "password",
-                                        "example": "secret"
+                                        "example": "password123"
                                     }
                                 },
                                 "type": "object"
@@ -50,22 +48,26 @@
                 },
                 "responses": {
                     "200": {
-                        "description": "Successful authentication",
+                        "description": "Successful login",
                         "content": {
                             "application/json": {
                                 "schema": {
                                     "properties": {
-                                        "access_token": {
+                                        "message": {
                                             "type": "string",
-                                            "example": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiIs..."
+                                            "example": "Login Successful!"
                                         },
-                                        "token_type": {
-                                            "type": "string",
-                                            "example": "Bearer"
-                                        },
-                                        "expires_in": {
-                                            "type": "integer",
-                                            "example": 3600
+                                        "results": {
+                                            "properties": {
+                                                "user": {
+                                                    "$ref": "#/components/schemas/UserResource"
+                                                },
+                                                "token": {
+                                                    "type": "string",
+                                                    "example": "your_auth_token"
+                                                }
+                                            },
+                                            "type": "object"
                                         }
                                     },
                                     "type": "object"
@@ -74,14 +76,14 @@
                         }
                     },
                     "401": {
-                        "description": "Authentication failed due to invalid credentials",
+                        "description": "Invalid credentials",
                         "content": {
                             "application/json": {
                                 "schema": {
                                     "properties": {
                                         "message": {
                                             "type": "string",
-                                            "example": "Invalid credentials"
+                                            "example": "These credentials do not match our records."
                                         }
                                     },
                                     "type": "object"
@@ -108,6 +110,26 @@
                                 }
                             }
                         }
+                    },
+                    "500": {
+                        "description": "Server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Login Failed!"
+                                        },
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Error message"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -117,8 +139,8 @@
                 "tags": [
                     "Auth"
                 ],
-                "summary": "Register a new user",
-                "description": "Creates a new user account and returns user data with an authentication token.",
+                "summary": "Registers a new user",
+                "description": "Registers a new user and returns the user object.",
                 "operationId": "5d4fa5d5607ed675ba93907e1fc94534",
                 "requestBody": {
                     "required": true,
@@ -139,17 +161,17 @@
                                     "email": {
                                         "type": "string",
                                         "format": "email",
-                                        "example": "john@example.com"
+                                        "example": "john.doe@example.com"
                                     },
                                     "password": {
                                         "type": "string",
                                         "format": "password",
-                                        "example": "P@ssw0rd!"
+                                        "example": "password123"
                                     },
                                     "password_confirmation": {
                                         "type": "string",
                                         "format": "password",
-                                        "example": "P@ssw0rd!"
+                                        "example": "password123"
                                     }
                                 },
                                 "type": "object"
@@ -159,180 +181,22 @@
                 },
                 "responses": {
                     "201": {
-                        "description": "User registered successfully",
+                        "description": "Successful registration",
                         "content": {
                             "application/json": {
                                 "schema": {
                                     "properties": {
-                                        "success": {
-                                            "type": "boolean",
-                                            "example": true
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Registration Successful!"
                                         },
-                                        "data": {
+                                        "results": {
                                             "properties": {
                                                 "user": {
-                                                    "properties": {
-                                                        "id": {
-                                                            "type": "integer",
-                                                            "example": 1
-                                                        },
-                                                        "name": {
-                                                            "type": "string",
-                                                            "example": "John Doe"
-                                                        },
-                                                        "email": {
-                                                            "type": "string",
-                                                            "format": "email",
-                                                            "example": "john@example.com"
-                                                        },
-                                                        "created_at": {
-                                                            "type": "string",
-                                                            "format": "date-time",
-                                                            "example": "2025-01-01T12:00:00Z"
-                                                        }
-                                                    },
-                                                    "type": "object"
-                                                },
-                                                "token": {
-                                                    "type": "string",
-                                                    "example": "eyJ0eXAiOiJKV1QiLCJhbGciOiJI..."
+                                                    "$ref": "#/components/schemas/UserResource"
                                                 }
                                             },
                                             "type": "object"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
-                    "422": {
-                        "description": "Validation failed",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "success": {
-                                            "type": "boolean",
-                                            "example": false
-                                        },
-                                        "message": {
-                                            "type": "string",
-                                            "example": "The given data was invalid."
-                                        },
-                                        "errors": {
-                                            "description": "Validation errors keyed by field",
-                                            "type": "object"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
-                    "500": {
-                        "description": "Server error",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "success": {
-                                            "type": "boolean",
-                                            "example": false
-                                        },
-                                        "message": {
-                                            "type": "string",
-                                            "example": "An unexpected error occurred."
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/add-to-cart": {
-            "post": {
-                "tags": [
-                    "Cart"
-                ],
-                "summary": "Tambahkan produk baru ke keranjang belanja",
-                "description": "Menambahkan produk ke keranjang belanja pengguna saat ini atau memperbarui kuantitas jika produk sudah ada.",
-                "operationId": "fdf6670ad318c6e8b3e7b805cb6279e7",
-                "requestBody": {
-                    "description": "Data yang diperlukan untuk menambahkan produk ke keranjang.",
-                    "required": true,
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "required": [
-                                    "product_id",
-                                    "quantity"
-                                ],
-                                "properties": {
-                                    "product_id": {
-                                        "description": "ID unik produk",
-                                        "type": "integer",
-                                        "example": 45
-                                    },
-                                    "quantity": {
-                                        "description": "Jumlah produk yang ingin ditambahkan",
-                                        "type": "integer",
-                                        "example": 2
-                                    },
-                                    "color": {
-                                        "description": "Varian warna produk (opsional)",
-                                        "type": "string",
-                                        "example": "Merah",
-                                        "nullable": true
-                                    },
-                                    "size": {
-                                        "description": "Varian ukuran produk (opsional)",
-                                        "type": "string",
-                                        "example": "L",
-                                        "nullable": true
-                                    }
-                                },
-                                "type": "object"
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "201": {
-                        "description": "Produk berhasil ditambahkan atau diperbarui di keranjang",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "message": {
-                                            "type": "string",
-                                            "example": "Produk berhasil ditambahkan ke keranjang."
-                                        },
-                                        "results": {
-                                            "description": "Daftar item keranjang yang diperbarui (menggunakan CartResource)",
-                                            "type": "array",
-                                            "items": {
-                                                "$ref": "#/components/schemas/Cart"
-                                            }
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized - User belum login",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "message": {
-                                            "type": "string",
-                                            "example": "Unauthenticated."
                                         }
                                     },
                                     "type": "object"
@@ -351,7 +215,7 @@
                                             "example": "The given data was invalid."
                                         },
                                         "errors": {
-                                            "description": "Detail kesalahan validasi",
+                                            "description": "Validation error details",
                                             "type": "object"
                                         }
                                     },
@@ -359,35 +223,48 @@
                                 }
                             }
                         }
-                    }
-                },
-                "security": [
-                    {
-                        "bearerAuth": []
-                    }
-                ]
-            }
-        },
-        "/get-product-carts": {
-            "get": {
-                "tags": [
-                    "Cart"
-                ],
-                "summary": "Get all product carts",
-                "description": "Mengambil semua data cart dan mengembalikannya dalam bentuk CartResource collection.",
-                "operationId": "9516066571da6032c5140eb2718876b5",
-                "responses": {
-                    "200": {
-                        "description": "Berhasil mengambil daftar cart",
+                    },
+                    "500": {
+                        "description": "Server error",
                         "content": {
                             "application/json": {
                                 "schema": {
                                     "properties": {
-                                        "results": {
-                                            "type": "array",
-                                            "items": {
-                                                "$ref": "#/components/schemas/Cart"
-                                            }
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Registration Failed!"
+                                        },
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Error message"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/logout": {
+            "post": {
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Logout the authenticated user",
+                "description": "Revokes the current user's authentication token.",
+                "operationId": "28d48c13fca984400ac8de99f54ee13a",
+                "responses": {
+                    "200": {
+                        "description": "Successful logout",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Logout success"
                                         }
                                     },
                                     "type": "object"
@@ -419,42 +296,49 @@
                 ]
             }
         },
-        "/remove-cart-product": {
-            "delete": {
+        "/add-to-cart": {
+            "post": {
                 "tags": [
                     "Cart"
                 ],
-                "summary": "Hapus satu item dari keranjang belanja",
-                "description": "Menghapus item keranjang berdasarkan ID produk atau ID item keranjang yang diberikan sebagai query parameter. Setelah dihapus, mengembalikan daftar item keranjang yang tersisa.",
-                "operationId": "07071574342b5c294e07d37a9f53391f",
-                "parameters": [
-                    {
-                        "name": "query_params",
-                        "in": "query",
-                        "description": "ID item keranjang (Cart ID) atau ID produk (Product ID) yang akan dihapus.",
-                        "required": true,
-                        "schema": {
-                            "type": "integer",
-                            "example": 4
+                "summary": "Add a product to the cart",
+                "description": "Menambahkan produk ke keranjang belanja user yang sedang login.",
+                "operationId": "fdf6670ad318c6e8b3e7b805cb6279e7",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "product_id": {
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "quantity": {
+                                        "type": "integer",
+                                        "example": 2
+                                    }
+                                },
+                                "type": "object"
+                            }
                         }
                     }
-                ],
+                },
                 "responses": {
-                    "200": {
-                        "description": "Item berhasil dihapus dari keranjang",
+                    "201": {
+                        "description": "Produk berhasil ditambahkan ke keranjang",
                         "content": {
                             "application/json": {
                                 "schema": {
                                     "properties": {
                                         "message": {
                                             "type": "string",
-                                            "example": "Produk berhasil dihapus dari keranjang."
+                                            "example": "Produk berhasil ditambahkan ke keranjang."
                                         },
                                         "results": {
-                                            "description": "Daftar item keranjang yang tersisa (menggunakan CartResource)",
                                             "type": "array",
                                             "items": {
-                                                "$ref": "#/components/schemas/Cart"
+                                                "$ref": "#/components/schemas/CartResource"
                                             }
                                         }
                                     },
@@ -463,8 +347,24 @@
                             }
                         }
                     },
+                    "400": {
+                        "description": "Invalid request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "The given data was invalid."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
                     "401": {
-                        "description": "Unauthorized - User belum login",
+                        "description": "Unauthorized",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -479,15 +379,15 @@
                             }
                         }
                     },
-                    "404": {
-                        "description": "Item keranjang tidak ditemukan",
+                    "500": {
+                        "description": "Internal server error",
                         "content": {
                             "application/json": {
                                 "schema": {
                                     "properties": {
                                         "message": {
                                             "type": "string",
-                                            "example": "Item keranjang tidak ditemukan."
+                                            "example": "Internal server error."
                                         }
                                     },
                                     "type": "object"
@@ -503,17 +403,187 @@
                 ]
             }
         },
-        "/categories": {
+        "/cart": {
             "get": {
                 "tags": [
-                    "Category"
+                    "Cart"
                 ],
-                "summary": "Get all categories",
-                "description": "Mengambil semua kategori dan mengembalikannya dalam bentuk CategoryResource collection.",
-                "operationId": "d212113cfa8b7845529cdcecf8953d81",
+                "summary": "Get all product carts",
+                "description": "Mengambil semua product di cart berdasarkan user id.",
+                "operationId": "fc65b32271200cee2ba61932eafae576",
                 "responses": {
                     "200": {
-                        "description": "Berhasil mengambil daftar kategori",
+                        "description": "Success",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Get product carts successfully."
+                                        },
+                                        "results": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/CartResource"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Unauthenticated."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Internal server error."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/remove-cart-product": {
+            "delete": {
+                "tags": [
+                    "Cart"
+                ],
+                "summary": "Remove a product from the cart",
+                "description": "Menghapus produk dari keranjang belanja berdasarkan cart ID.",
+                "operationId": "07071574342b5c294e07d37a9f53391f",
+                "parameters": [
+                    {
+                        "name": "cart_id",
+                        "in": "query",
+                        "description": "ID of the cart item to remove",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Produk berhasil dihapus dari keranjang",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Product has been removed from cart successfully."
+                                        },
+                                        "results": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/CartResource"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Invalid cart ID."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Unauthenticated."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Internal server error."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/get-categories": {
+            "get": {
+                "tags": [
+                    "Categories"
+                ],
+                "summary": "Get all categories",
+                "description": "Retrieve a list of all categories.",
+                "operationId": "008d7fcace0e31e58589862bc615bf42",
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -525,7 +595,7 @@
                                         "results": {
                                             "type": "array",
                                             "items": {
-                                                "$ref": "#/components/schemas/Category"
+                                                "$ref": "#/components/schemas/CategoryResource"
                                             }
                                         }
                                     },
@@ -533,6 +603,9 @@
                                 }
                             }
                         }
+                    },
+                    "500": {
+                        "description": "Internal server error"
                     }
                 }
             }
@@ -540,72 +613,40 @@
         "/order-registration": {
             "post": {
                 "tags": [
-                    "Order"
+                    "Orders"
                 ],
                 "summary": "Register a new order",
-                "description": "Mendaftarkan pesanan baru berdasarkan data yang dikirimkan user.",
+                "description": "Creates New Order",
                 "operationId": "a2580df9ab7f2e7819eae9f0e6dab40b",
                 "requestBody": {
-                    "description": "Order registration payload",
                     "required": true,
                     "content": {
                         "application/json": {
                             "schema": {
                                 "properties": {
-                                    "user_id": {
+                                    "shipping_address_id": {
                                         "type": "integer",
-                                        "example": 12
+                                        "example": "1"
                                     },
-                                    "item_count": {
+                                    "billing_address_id": {
                                         "type": "integer",
-                                        "example": 3
+                                        "example": "2"
                                     },
-                                    "total_price": {
-                                        "type": "number",
-                                        "format": "float",
-                                        "example": 450000
-                                    },
-                                    "shipping_address": {
+                                    "payment_method": {
                                         "type": "string",
-                                        "example": "Jl. Merdeka No. 123, Jakarta"
+                                        "example": "credit_card"
                                     },
                                     "products": {
                                         "type": "array",
                                         "items": {
                                             "properties": {
-                                                "product_id": {
+                                                "id": {
                                                     "type": "integer",
-                                                    "example": 5
-                                                },
-                                                "title": {
-                                                    "type": "string",
-                                                    "example": "Nike Air Max 97"
+                                                    "example": "1"
                                                 },
                                                 "quantity": {
                                                     "type": "integer",
-                                                    "example": 2
-                                                },
-                                                "color": {
-                                                    "type": "string",
-                                                    "example": "Black"
-                                                },
-                                                "size": {
-                                                    "type": "string",
-                                                    "example": "Xl"
-                                                },
-                                                "product_price": {
-                                                    "type": "number",
-                                                    "format": "float",
-                                                    "example": 225000
-                                                },
-                                                "total_price": {
-                                                    "type": "number",
-                                                    "format": "float",
-                                                    "example": 450000
-                                                },
-                                                "image": {
-                                                    "type": "string",
-                                                    "example": "https://cdn.example.com/products/airmax.jpg"
+                                                    "example": "2"
                                                 }
                                             },
                                             "type": "object"
@@ -634,21 +675,8 @@
                             }
                         }
                     },
-                    "401": {
-                        "description": "Unauthorized",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "message": {
-                                            "type": "string",
-                                            "example": "Unauthenticated."
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
+                    "422": {
+                        "description": "Validation errors"
                     }
                 },
                 "security": [
@@ -661,14 +689,14 @@
         "/get-orders": {
             "get": {
                 "tags": [
-                    "Order"
+                    "Orders"
                 ],
-                "summary": "Get user's orders",
-                "description": "Mengambil semua pesanan milik user yang sedang login, termasuk statuses dan orderedProducts.",
+                "summary": "Get all orders for the authenticated user",
+                "description": "Get Orders",
                 "operationId": "54561fcdcc8f3f1e8cfd59f2bb99df7c",
                 "responses": {
                     "200": {
-                        "description": "Berhasil mengambil daftar pesanan",
+                        "description": "Orders retrieved successfully",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -678,97 +706,9 @@
                                             "example": "Get orders successfuly"
                                         },
                                         "results": {
-                                            "description": "Daftar semua pesanan user",
                                             "type": "array",
                                             "items": {
-                                                "properties": {
-                                                    "id": {
-                                                        "type": "integer",
-                                                        "example": 10
-                                                    },
-                                                    "user_id": {
-                                                        "type": "integer",
-                                                        "example": 3
-                                                    },
-                                                    "item_count": {
-                                                        "type": "integer",
-                                                        "example": 5
-                                                    },
-                                                    "total_price": {
-                                                        "type": "number",
-                                                        "format": "float",
-                                                        "example": 450000
-                                                    },
-                                                    "shipping_address": {
-                                                        "type": "string",
-                                                        "example": "Jl. Merdeka No. 123, Jakarta"
-                                                    },
-                                                    "status": {
-                                                        "type": "string",
-                                                        "example": "processing"
-                                                    },
-                                                    "statuses": {
-                                                        "description": "Riwayat status order",
-                                                        "type": "array",
-                                                        "items": {
-                                                            "properties": {
-                                                                "status": {
-                                                                    "type": "string",
-                                                                    "example": "processing"
-                                                                },
-                                                                "created_at": {
-                                                                    "type": "string",
-                                                                    "example": "2025-01-20 14:23:00"
-                                                                }
-                                                            },
-                                                            "type": "object"
-                                                        }
-                                                    },
-                                                    "products": {
-                                                        "description": "Produk yang dipesan",
-                                                        "type": "array",
-                                                        "items": {
-                                                            "properties": {
-                                                                "product_id": {
-                                                                    "type": "integer",
-                                                                    "example": 12
-                                                                },
-                                                                "title": {
-                                                                    "type": "string",
-                                                                    "example": "Nike Air Max 270"
-                                                                },
-                                                                "quantity": {
-                                                                    "type": "integer",
-                                                                    "example": 2
-                                                                },
-                                                                "color": {
-                                                                    "type": "string",
-                                                                    "example": "Black"
-                                                                },
-                                                                "size": {
-                                                                    "type": "string",
-                                                                    "example": "Xl"
-                                                                },
-                                                                "product_price": {
-                                                                    "type": "number",
-                                                                    "format": "float",
-                                                                    "example": 150000
-                                                                },
-                                                                "total_price": {
-                                                                    "type": "number",
-                                                                    "format": "float",
-                                                                    "example": 300000
-                                                                },
-                                                                "image": {
-                                                                    "type": "string",
-                                                                    "example": "https://example.com/image.jpg"
-                                                                }
-                                                            },
-                                                            "type": "object"
-                                                        }
-                                                    }
-                                                },
-                                                "type": "object"
+                                                "$ref": "#/components/schemas/OrderResource"
                                             }
                                         }
                                     },
@@ -778,7 +718,7 @@
                         }
                     },
                     "401": {
-                        "description": "Unauthorized - User belum login"
+                        "description": "Unauthorized"
                     }
                 },
                 "security": [
@@ -791,14 +731,14 @@
         "/get-top-selling": {
             "get": {
                 "tags": [
-                    "Product"
+                    "Products"
                 ],
-                "summary": "Get top selling products",
-                "description": "Mengambil daftar produk dengan penjualan terbanyak.",
-                "operationId": "7ff4f059b42a08f4dba10968b9a3eaa1",
+                "summary": "Get top selling products for the authenticated user",
+                "description": "Returns a list of top selling products for the authenticated user.",
+                "operationId": "getTopSellingProducts",
                 "responses": {
                     "200": {
-                        "description": "Berhasil mengambil daftar produk terlaris",
+                        "description": "Successful operation",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -810,7 +750,7 @@
                                         "results": {
                                             "type": "array",
                                             "items": {
-                                                "$ref": "#/components/schemas/Product"
+                                                "$ref": "#/components/schemas/ProductResource"
                                             }
                                         }
                                     },
@@ -819,15 +759,19 @@
                             }
                         }
                     },
-                    "401": {
-                        "description": "Unauthorized",
+                    "500": {
+                        "description": "Internal Server Error",
                         "content": {
                             "application/json": {
                                 "schema": {
                                     "properties": {
                                         "message": {
                                             "type": "string",
-                                            "example": "Unauthenticated."
+                                            "example": "Internal Server Error: Failed to fetch top selling products."
+                                        },
+                                        "error_code": {
+                                            "type": "integer",
+                                            "example": 500
                                         }
                                     },
                                     "type": "object"
@@ -846,14 +790,14 @@
         "/get-new-in": {
             "get": {
                 "tags": [
-                    "Product"
+                    "Products"
                 ],
-                "summary": "Get newly added products",
-                "description": "Mengambil daftar produk terbaru yang baru saja ditambahkan.",
-                "operationId": "faf16960e44098fe164c6ec0fc38beff",
+                "summary": "Get new in products",
+                "description": "Returns a list of new in products.",
+                "operationId": "getNewInProducts",
                 "responses": {
                     "200": {
-                        "description": "Berhasil mengambil daftar produk terbaru",
+                        "description": "Successful operation",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -865,7 +809,7 @@
                                         "results": {
                                             "type": "array",
                                             "items": {
-                                                "$ref": "#/components/schemas/Product"
+                                                "$ref": "#/components/schemas/ProductResource"
                                             }
                                         }
                                     },
@@ -874,15 +818,19 @@
                             }
                         }
                     },
-                    "401": {
-                        "description": "Unauthorized",
+                    "500": {
+                        "description": "Internal Server Error",
                         "content": {
                             "application/json": {
                                 "schema": {
                                     "properties": {
                                         "message": {
                                             "type": "string",
-                                            "example": "Unauthenticated."
+                                            "example": "Internal Server Error: Failed to fetch new in products."
+                                        },
+                                        "error_code": {
+                                            "type": "integer",
+                                            "example": 500
                                         }
                                     },
                                     "type": "object"
@@ -890,32 +838,30 @@
                             }
                         }
                     }
-                },
-                "security": [
-                    {
-                        "bearerAuth": []
-                    }
-                ]
+                }
             }
         },
         "/toggle-favorite": {
             "post": {
                 "tags": [
-                    "Product"
+                    "Products"
                 ],
-                "summary": "Toggle product favorite status",
-                "description": "Menambahkan atau menghapus produk dari daftar favorit user berdasarkan product_id.",
-                "operationId": "b70e15ba029d99abe6eb76552afa8a19",
+                "summary": "Toggle a product's favorite status for the authenticated user",
+                "description": "Toggles the favorite status of a product for the authenticated user. Returns success message and status.",
+                "operationId": "toggleFavoriteProduct",
                 "requestBody": {
-                    "description": "Payload untuk toggle favorit",
                     "required": true,
                     "content": {
                         "application/json": {
                             "schema": {
+                                "required": [
+                                    "product_id"
+                                ],
                                 "properties": {
                                     "product_id": {
+                                        "description": "ID of the product to toggle favorite status",
                                         "type": "integer",
-                                        "example": 7
+                                        "example": 1
                                     }
                                 },
                                 "type": "object"
@@ -924,28 +870,8 @@
                     }
                 },
                 "responses": {
-                    "201": {
-                        "description": "Produk berhasil ditambahkan ke favorit",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "message": {
-                                            "type": "string",
-                                            "example": "Produk berhasil ditambahkan ke favorit."
-                                        },
-                                        "status": {
-                                            "type": "boolean",
-                                            "example": true
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
                     "200": {
-                        "description": "Produk berhasil dihapus dari favorit / tidak ada perubahan",
+                        "description": "Successful operation - Product removed from favorites",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -964,15 +890,19 @@
                             }
                         }
                     },
-                    "422": {
-                        "description": "Validasi gagal",
+                    "201": {
+                        "description": "Successful operation - Product added to favorites",
                         "content": {
                             "application/json": {
                                 "schema": {
                                     "properties": {
                                         "message": {
                                             "type": "string",
-                                            "example": "The product_id field is required."
+                                            "example": "Produk berhasil ditambahkan ke favorit."
+                                        },
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": true
                                         }
                                     },
                                     "type": "object"
@@ -980,15 +910,35 @@
                             }
                         }
                     },
-                    "401": {
-                        "description": "Unauthorized",
+                    "422": {
+                        "description": "Validation Error",
                         "content": {
                             "application/json": {
                                 "schema": {
                                     "properties": {
                                         "message": {
                                             "type": "string",
-                                            "example": "Unauthenticated."
+                                            "example": "Validation Error: The product_id field is required."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Internal Server Error: Failed to toggle favorite status."
+                                        },
+                                        "error_code": {
+                                            "type": "integer",
+                                            "example": 500
                                         }
                                     },
                                     "type": "object"
@@ -1007,14 +957,14 @@
         "/get-favorite-products": {
             "get": {
                 "tags": [
-                    "Product"
+                    "Products"
                 ],
-                "summary": "Get all favorited products",
-                "description": "Mengambil semua produk yang telah ditandai sebagai favorit oleh user.",
-                "operationId": "28fbf019aabbc8dbabf026479671a0f5",
+                "summary": "Get favorite products for the authenticated user",
+                "description": "Returns a list of favorite products for the authenticated user.",
+                "operationId": "getFavoriteProducts",
                 "responses": {
                     "200": {
-                        "description": "Berhasil mengambil daftar produk favorit",
+                        "description": "Successful operation",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -1026,7 +976,7 @@
                                         "results": {
                                             "type": "array",
                                             "items": {
-                                                "$ref": "#/components/schemas/Product"
+                                                "$ref": "#/components/schemas/ProductResource"
                                             }
                                         }
                                     },
@@ -1035,15 +985,19 @@
                             }
                         }
                     },
-                    "401": {
-                        "description": "Unauthorized",
+                    "500": {
+                        "description": "Internal Server Error",
                         "content": {
                             "application/json": {
                                 "schema": {
                                     "properties": {
                                         "message": {
                                             "type": "string",
-                                            "example": "Unauthenticated."
+                                            "example": "Internal Server Error: Failed to fetch favorite products."
+                                        },
+                                        "error_code": {
+                                            "type": "integer",
+                                            "example": 500
                                         }
                                     },
                                     "type": "object"
@@ -1062,26 +1016,26 @@
         "/get-products-byid-category": {
             "get": {
                 "tags": [
-                    "Product"
+                    "Products"
                 ],
                 "summary": "Get products by category ID",
-                "description": "Mengambil daftar produk berdasarkan ID kategori yang dikirimkan melalui query parameter.",
-                "operationId": "ab107b4f40d1906f79fa909f04444d0d",
+                "description": "Returns a list of products filtered by category ID.",
+                "operationId": "getProductsByIdCategory",
                 "parameters": [
                     {
                         "name": "query_params",
                         "in": "query",
-                        "description": "ID kategori untuk mengambil daftar produk",
+                        "description": "Category ID to filter products",
                         "required": true,
                         "schema": {
                             "type": "integer",
-                            "example": 3
+                            "format": "int64"
                         }
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "Berhasil mengambil daftar produk",
+                        "description": "Successful operation",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -1093,7 +1047,7 @@
                                         "results": {
                                             "type": "array",
                                             "items": {
-                                                "$ref": "#/components/schemas/Product"
+                                                "$ref": "#/components/schemas/ProductResource"
                                             }
                                         }
                                     },
@@ -1102,15 +1056,19 @@
                             }
                         }
                     },
-                    "401": {
-                        "description": "Unauthorized",
+                    "500": {
+                        "description": "Internal Server Error",
                         "content": {
                             "application/json": {
                                 "schema": {
                                     "properties": {
                                         "message": {
                                             "type": "string",
-                                            "example": "Unauthenticated."
+                                            "example": "Internal Server Error: Failed to fetch products by category ID."
+                                        },
+                                        "error_code": {
+                                            "type": "integer",
+                                            "example": 500
                                         }
                                     },
                                     "type": "object"
@@ -1118,37 +1076,31 @@
                             }
                         }
                     }
-                },
-                "security": [
-                    {
-                        "bearerAuth": []
-                    }
-                ]
+                }
             }
         },
         "/get-products-by-title": {
             "get": {
                 "tags": [
-                    "Product"
+                    "Products"
                 ],
-                "summary": "Get products by title keyword",
-                "description": "Mengambil daftar produk berdasarkan pencarian judul (title) yang dikirim melalui query parameter.",
-                "operationId": "a867602a68aff3ad83bec290292a9f77",
+                "summary": "Get products by title",
+                "description": "Returns a list of products filtered by title.",
+                "operationId": "getProductsByTitle",
                 "parameters": [
                     {
                         "name": "query_params",
                         "in": "query",
-                        "description": "Keyword atau title produk yang ingin dicari",
+                        "description": "Title to filter products",
                         "required": true,
                         "schema": {
-                            "type": "string",
-                            "example": "Air Jordan"
+                            "type": "string"
                         }
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "Produk ditemukan",
+                        "description": "Successful operation",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -1160,7 +1112,7 @@
                                         "results": {
                                             "type": "array",
                                             "items": {
-                                                "$ref": "#/components/schemas/Product"
+                                                "$ref": "#/components/schemas/ProductResource"
                                             }
                                         }
                                     },
@@ -1169,37 +1121,19 @@
                             }
                         }
                     },
-                    "404": {
-                        "description": "Produk tidak ditemukan",
+                    "500": {
+                        "description": "Internal Server Error",
                         "content": {
                             "application/json": {
                                 "schema": {
                                     "properties": {
                                         "message": {
                                             "type": "string",
-                                            "example": "Product Not Found"
+                                            "example": "Internal Server Error: Failed to fetch products by title."
                                         },
-                                        "results": {
-                                            "type": "array",
-                                            "items": {
-                                                "$ref": "#/components/schemas/Product"
-                                            }
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "message": {
-                                            "type": "string",
-                                            "example": "Unauthenticated."
+                                        "error_code": {
+                                            "type": "integer",
+                                            "example": 500
                                         }
                                     },
                                     "type": "object"
@@ -1207,21 +1141,16 @@
                             }
                         }
                     }
-                },
-                "security": [
-                    {
-                        "bearerAuth": []
-                    }
-                ]
+                }
             }
         }
     },
     "components": {
         "schemas": {
-            "Cart": {
-                "title": "Cart Schema",
+            "CartResource": {
+                "title": "CartResource Schema",
                 "properties": {
-                    "user_id": {
+                    "id": {
                         "type": "integer"
                     },
                     "product_id": {
@@ -1240,55 +1169,166 @@
                         "type": "string"
                     },
                     "product_price": {
-                        "type": "number",
-                        "format": "float"
+                        "type": "number"
                     },
                     "total_price": {
-                        "type": "number",
-                        "format": "float"
+                        "type": "number"
                     },
                     "product_image": {
                         "type": "string"
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time"
                     }
                 },
                 "type": "object"
             },
-            "Category": {
-                "title": "Category Schema",
+            "CategoryResource": {
+                "title": "CategoryResource Schema",
                 "properties": {
+                    "id": {
+                        "type": "integer"
+                    },
                     "title": {
                         "type": "string"
                     },
                     "image": {
                         "type": "string"
+                    },
+                    "products": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ProductResource"
+                        }
                     }
                 },
                 "type": "object"
             },
-            "Order": {
-                "title": "Order Schema",
+            "OrderResource": {
+                "title": "OrderResource Schema",
                 "properties": {
-                    "user_id": {
+                    "order_id": {
                         "type": "integer"
+                    },
+                    "user": {
+                        "$ref": "#/components/schemas/UserResource"
                     },
                     "code": {
-                        "type": "integer"
-                    },
-                    "shipping_address": {
                         "type": "string"
                     },
-                    "item_count": {
+                    "shippingAddress": {
+                        "type": "string"
+                    },
+                    "itemCount": {
+                        "type": "integer"
+                    },
+                    "totalPrice": {
+                        "type": "number"
+                    },
+                    "createdDate": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "products": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/OrderedProductsResource"
+                        }
+                    },
+                    "orderStatus": {
+                        "type": "array",
+                        "items": {
+                            "properties": {
+                                "title": {
+                                    "type": "string"
+                                },
+                                "done": {
+                                    "type": "boolean"
+                                },
+                                "createdDate": {
+                                    "type": "string",
+                                    "format": "date-time"
+                                }
+                            },
+                            "type": "object"
+                        }
+                    }
+                },
+                "type": "object"
+            },
+            "OrderedProductsResource": {
+                "title": "OrderedProductsResource Schema",
+                "properties": {
+                    "id": {
+                        "type": "integer"
+                    },
+                    "order_id": {
+                        "type": "integer"
+                    },
+                    "product_id": {
+                        "type": "integer"
+                    },
+                    "product_title": {
+                        "type": "string"
+                    },
+                    "product_quantity": {
                         "type": "integer"
                     },
                     "total_price": {
+                        "type": "number",
+                        "format": "float"
+                    },
+                    "product_price": {
+                        "type": "number",
+                        "format": "float"
+                    },
+                    "product_color": {
+                        "type": "string"
+                    },
+                    "product_image": {
+                        "type": "string"
+                    },
+                    "product_size": {
+                        "type": "string"
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    }
+                },
+                "type": "object"
+            },
+            "ProductColorsResource": {
+                "title": "ProductColorsResource Schema",
+                "properties": {
+                    "product_id": {
+                        "type": "integer"
+                    },
+                    "title": {
+                        "type": "string"
+                    },
+                    "rgb": {
                         "type": "string"
                     }
                 },
                 "type": "object"
             },
-            "Product": {
-                "title": "Product Schema",
+            "ProductImagesResource": {
+                "title": "ProductImagesResource Schema",
                 "properties": {
+                    "url": {
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
+            "ProductResource": {
+                "title": "ProductResource Schema",
+                "properties": {
+                    "id": {
+                        "type": "integer"
+                    },
                     "category_id": {
                         "type": "integer"
                     },
@@ -1300,20 +1340,65 @@
                         "type": "string"
                     },
                     "price": {
-                        "type": "folat"
+                        "type": "number",
+                        "format": "float"
                     },
                     "sales_number": {
                         "type": "integer"
                     },
                     "title": {
                         "type": "string"
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "updated_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "category": {
+                        "$ref": "#/components/schemas/CategoryResource"
+                    },
+                    "images": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ProductImagesResource"
+                        }
+                    },
+                    "colors": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ProductColorsResource"
+                        }
+                    },
+                    "sizes": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ProductSizeResource"
+                        }
                     }
                 },
                 "type": "object"
             },
-            "Auth": {
-                "title": "Authentication Schema",
+            "ProductSizeResource": {
+                "title": "ProductSizeResource Schema",
                 "properties": {
+                    "product_id": {
+                        "type": "integer"
+                    },
+                    "size": {
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
+            "UserResource": {
+                "title": "UserResource Schema",
+                "properties": {
+                    "id": {
+                        "type": "integer"
+                    },
                     "first_name": {
                         "type": "string"
                     },
@@ -1323,14 +1408,15 @@
                     "email": {
                         "type": "string"
                     },
-                    "password": {
-                        "type": "string"
-                    },
                     "image": {
                         "type": "string"
                     },
                     "gender": {
                         "type": "number"
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time"
                     }
                 },
                 "type": "object"
@@ -1347,16 +1433,16 @@
             "description": "Cart"
         },
         {
-            "name": "Category",
-            "description": "Category"
+            "name": "Categories",
+            "description": "Categories"
         },
         {
-            "name": "Order",
-            "description": "Order"
+            "name": "Orders",
+            "description": "Orders"
         },
         {
-            "name": "Product",
-            "description": "Product"
+            "name": "Products",
+            "description": "Products"
         }
     ]
 }

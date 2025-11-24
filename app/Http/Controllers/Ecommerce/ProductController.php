@@ -17,34 +17,33 @@ class ProductController extends Controller
         $this->productService = $productService;
     }
 
+
     /**
      * @OA\Get(
-     *     path="/get-top-selling",
-     *     tags={"Product"},
-     *     summary="Get top selling products",
-     *     description="Mengambil daftar produk terlaris berdasarkan penjualan.",
-     *     security={{"bearerAuth": {}}},
-     *
-     *     @OA\Response(
-     *         response=200,
-     *         description="Berhasil mengambil daftar produk terlaris",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="message", type="string", example="Success"),
-     *             @OA\Property(
-     *                 property="results",
-     *                 type="array",
-     *                 @OA\Items(ref="#/components/schemas/Product")
-     *             )
-     *         )
-     *     ),
-     *
-     *     @OA\Response(
-     *         response=401,
-     *         description="Unauthorized",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="message", type="string", example="Unauthenticated.")
-     *         )
-     *     )
+     *      path="/get-top-selling",
+     *      operationId="getTopSellingProducts",
+     *      tags={"Products"},
+     *      summary="Get top selling products for the authenticated user",
+     *      description="Returns a list of top selling products for the authenticated user.",
+     *      security={{"bearerAuth":{}}},
+     *      @OA\Response(
+     *          response=200,
+     *          description="Successful operation",
+     *          @OA\JsonContent(
+     *              type="object",
+     *              @OA\Property(property="message", type="string", example="Success"),
+     *              @OA\Property(property="results", type="array", @OA\Items(ref="#/components/schemas/ProductResource"))
+     *          )
+     *      ),
+     *      @OA\Response(
+     *          response=500,
+     *          description="Internal Server Error",
+     *          @OA\JsonContent(
+     *              type="object",
+     *              @OA\Property(property="message", type="string", example="Internal Server Error: Failed to fetch top selling products."),
+     *              @OA\Property(property="error_code", type="integer", example=500)
+     *          )
+     *      )
      * )
      */
     public function getTopSelling(Request $request)
@@ -73,32 +72,29 @@ class ProductController extends Controller
 
     /**
      * @OA\Get(
-     *     path="/get-new-in",
-     *     tags={"Product"},
-     *     summary="Get new in products",
-     *     description="Mengambil daftar produk terbaru yang baru saja ditambahkan.",
-     *     security={{"bearerAuth": {}}},
-     *
-     *     @OA\Response(
-     *         response=200,
-     *         description="Berhasil mengambil daftar produk terbaru",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="message", type="string", example="Success"),
-     *             @OA\Property(
-     *                 property="results",
-     *                 type="array",
-     *                 @OA\Items(ref="#/components/schemas/Product")
-     *             )
-     *         )
-     *     ),
-     *
-     *     @OA\Response(
-     *         response=401,
-     *         description="Unauthorized",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="message", type="string", example="Unauthenticated.")
-     *         )
-     *     )
+     *      path="/get-new-in",
+     *      operationId="getNewInProducts",
+     *      tags={"Products"},
+     *      summary="Get new in products",
+     *      description="Returns a list of new in products.",
+     *      @OA\Response(
+     *          response=200,
+     *          description="Successful operation",
+     *          @OA\JsonContent(
+     *              type="object",
+     *              @OA\Property(property="message", type="string", example="Success"),
+     *              @OA\Property(property="results", type="array", @OA\Items(ref="#/components/schemas/ProductResource"))
+     *          )
+     *      ),
+     *      @OA\Response(
+     *          response=500,
+     *          description="Internal Server Error",
+     *          @OA\JsonContent(
+     *              type="object",
+     *              @OA\Property(property="message", type="string", example="Internal Server Error: Failed to fetch new in products."),
+     *              @OA\Property(property="error_code", type="integer", example=500)
+     *          )
+     *      )
      * )
      */
     public function getNewIn()
@@ -125,47 +121,56 @@ class ProductController extends Controller
     }
 
 
-
     /**
      * @OA\Post(
-     *     path="/toggle-favorite",
-     *     tags={"Product"},
-     *     summary="Toggle favorite status for a product",
-     *     description="Menandai atau menghapus tanda favorit pada produk tertentu untuk user yang sedang login.",
-     *     security={{"bearerAuth": {}}},
-     *
-     *     @OA\RequestBody(
-     *         required=true,
-     *         @OA\JsonContent(
-     *             required={"product_id"},
-     *             @OA\Property(property="product_id", type="integer", example=1, description="ID produk yang akan ditandai atau dihapus dari favorit")
-     *         )
-     *     ),
-     *
-     *     @OA\Response(
-     *         response=200,
-     *         description="Berhasil mengubah status favorit produk",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="message", type="string", example="Produk berhasil ditambahkan ke favorit."),
-     *             @OA\Property(property="status", type="boolean", example=true, description="Status favorit produk setelah toggle (true: ditandai sebagai favorit, false: dihapus dari favorit)")
-     *         )
-     *     ),
-     *
-     *     @OA\Response(
-     *         response=422,
-     *         description="Validation Error",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="message", type="string", example="Validation Error: The product_id field is required.")
-     *         )
-     *     ),
-     *
-     *     @OA\Response(
-     *         response=401,
-     *         description="Unauthorized",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="message", type="string", example="Unauthenticated.")
-     *         )
-     *     )
+     *      path="/toggle-favorite",
+     *      operationId="toggleFavoriteProduct",
+     *      tags={"Products"},
+     *      summary="Toggle a product's favorite status for the authenticated user",
+     *      description="Toggles the favorite status of a product for the authenticated user. Returns success message and status.",
+     *      security={{"bearerAuth":{}}},
+     *      @OA\RequestBody(
+     *          required=true,
+     *          @OA\JsonContent(
+     *              required={"product_id"},
+     *              @OA\Property(property="product_id", type="integer", example=1, description="ID of the product to toggle favorite status")
+     *          )
+     *      ),
+     *      @OA\Response(
+     *          response=200,
+     *          description="Successful operation - Product removed from favorites",
+     *          @OA\JsonContent(
+     *              type="object",
+     *              @OA\Property(property="message", type="string", example="Produk berhasil dihapus dari favorit."),
+     *              @OA\Property(property="status", type="boolean", example=false)
+     *          )
+     *      ),
+     *      @OA\Response(
+     *          response=201,
+     *          description="Successful operation - Product added to favorites",
+     *          @OA\JsonContent(
+     *              type="object",
+     *              @OA\Property(property="message", type="string", example="Produk berhasil ditambahkan ke favorit."),
+     *              @OA\Property(property="status", type="boolean", example=true)
+     *          )
+     *      ),
+     *      @OA\Response(
+     *          response=422,
+     *          description="Validation Error",
+     *          @OA\JsonContent(
+     *              type="object",
+     *              @OA\Property(property="message", type="string", example="Validation Error: The product_id field is required.")
+     *          )
+     *      ),
+     *      @OA\Response(
+     *          response=500,
+     *          description="Internal Server Error",
+     *          @OA\JsonContent(
+     *              type="object",
+     *              @OA\Property(property="message", type="string", example="Internal Server Error: Failed to toggle favorite status."),
+     *              @OA\Property(property="error_code", type="integer", example=500)
+     *          )
+     *      )
      * )
      */
     public function toggleFavorite(Request $request)
@@ -216,32 +221,30 @@ class ProductController extends Controller
 
     /**
      * @OA\Get(
-     *     path="/get-favorite-products",
-     *     tags={"Product"},
-     *     summary="Get favorite products of the authenticated user",
-     *     description="Mengambil daftar produk favorit dari user yang sedang login.",
-     *     security={{"bearerAuth": {}}},
-     *
-     *     @OA\Response(
-     *         response=200,
-     *         description="Berhasil mengambil daftar produk favorit",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="message", type="string", example="Get Favorites Products Successfully"),
-     *             @OA\Property(
-     *                 property="results",
-     *                 type="array",
-     *                 @OA\Items(ref="#/components/schemas/Product")
-     *             )
-     *         )
-     *     ),
-     *
-     *     @OA\Response(
-     *         response=401,
-     *         description="Unauthorized",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="message", type="string", example="Unauthenticated.")
-     *         )
-     *     )
+     *      path="/get-favorite-products",
+     *      operationId="getFavoriteProducts",
+     *      tags={"Products"},
+     *      summary="Get favorite products for the authenticated user",
+     *      description="Returns a list of favorite products for the authenticated user.",
+     *      security={{"bearerAuth":{}}},
+     *      @OA\Response(
+     *          response=200,
+     *          description="Successful operation",
+     *          @OA\JsonContent(
+     *              type="object",
+     *              @OA\Property(property="message", type="string", example="Get Favorites Products Successfuly"),
+     *              @OA\Property(property="results", type="array", @OA\Items(ref="#/components/schemas/ProductResource"))
+     *          )
+     *      ),
+     *      @OA\Response(
+     *          response=500,
+     *          description="Internal Server Error",
+     *          @OA\JsonContent(
+     *              type="object",
+     *              @OA\Property(property="message", type="string", example="Internal Server Error: Failed to fetch favorite products."),
+     *              @OA\Property(property="error_code", type="integer", example=500)
+     *          )
+     *      )
      * )
      */
     public function getFavoriteProducts(Request $request)
@@ -272,53 +275,39 @@ class ProductController extends Controller
 
     /**
      * @OA\Get(
-     *     path="/get-products-byid-category",
-     *     tags={"Product"},
-     *     summary="Get products by category ID",
-     *     description="Mengambil daftar produk berdasarkan kategori yang dikirim melalui query parameter.",
-     *     security={{"bearerAuth": {}}},
-     *     *
-     *     @OA\Parameter(
-     *         name="query_params",
-     *         in="query",
-     *         required=true,
-     *         description="ID kategori produk",
-     *         @OA\Schema(type="integer", example=1)
-     *     ),
-     *
-     *     @OA\Response(
-     *         response=200,
-     *         description="Produk ditemukan",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="message", type="string", example="Get Products Successfuly"),
-     *             @OA\Property(
-     *                 property="results",
-     *                 type="array",
-     *                 @OA\Items(ref="#/components/schemas/Product")
-     *             )
-     *         )
-     *     ),
-     *
-     *     @OA\Response(
-     *         response=404,
-     *         description="Produk tidak ditemukan",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="message", type="string", example="Product Not Found"),
-     *             @OA\Property(
-     *                 property="results",
-     *                 type="array",
-     *                 @OA\Items(ref="#/components/schemas/Product")
-     *             )
-     *         )
-     *     ),
-     *
-     *     @OA\Response(
-     *         response=401,
-     *         description="Unauthorized",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="message", type="string", example="Unauthenticated.")
-     *         )
-     *     )
+     *      path="/get-products-byid-category",
+     *      operationId="getProductsByIdCategory",
+     *      tags={"Products"},
+     *      summary="Get products by category ID",
+     *      description="Returns a list of products filtered by category ID.",
+     *      @OA\Parameter(
+     *          name="query_params",
+     *          in="query",
+     *          description="Category ID to filter products",
+     *          required=true,
+     *          @OA\Schema(
+     *              type="integer",
+     *              format="int64"
+     *          )
+     *      ),
+     *      @OA\Response(
+     *          response=200,
+     *          description="Successful operation",
+     *          @OA\JsonContent(
+     *              type="object",
+     *              @OA\Property(property="message", type="string", example="Get Products Successfuly"),
+     *              @OA\Property(property="results", type="array", @OA\Items(ref="#/components/schemas/ProductResource"))
+     *          )
+     *      ),
+     *      @OA\Response(
+     *          response=500,
+     *          description="Internal Server Error",
+     *          @OA\JsonContent(
+     *              type="object",
+     *              @OA\Property(property="message", type="string", example="Internal Server Error: Failed to fetch products by category ID."),
+     *              @OA\Property(property="error_code", type="integer", example=500)
+     *          )
+     *      )
      * )
      */
     public function getProductsByIdCategory(Request $request)
@@ -348,53 +337,38 @@ class ProductController extends Controller
 
     /**
      * @OA\Get(
-     *     path="/get-products-by-title",
-     *     tags={"Product"},
-     *     summary="Get products by title",
-     *     description="Mengambil daftar produk berdasarkan judul yang dikirim melalui query parameter.",
-     *     security={{"bearerAuth": {}}},
-     *
-     *     @OA\Parameter(
-     *         name="query_params",
-     *         in="query",
-     *         required=true,
-     *         description="Judul produk",
-     *         @OA\Schema(type="string", example="Sneakers")
-     *     ),
-     *
-     *     @OA\Response(
-     *         response=200,
-     *         description="Produk ditemukan",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="message", type="string", example="Get Products Successfully"),
-     *             @OA\Property(
-     *                 property="results",
-     *                 type="array",
-     *                 @OA\Items(ref="#/components/schemas/Product")
-     *             )
-     *         )
-     *     ),
-     *
-     *     @OA\Response(
-     *         response=404,
-     *         description="Produk tidak ditemukan",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="message", type="string", example="Product Not Found"),
-     *             @OA\Property(
-     *                 property="results",
-     *                 type="array",
-     *                 @OA\Items(ref="#/components/schemas/Product")
-     *             )
-     *         )
-     *     ),
-     *
-     *     @OA\Response(
-     *         response=401,
-     *         description="Unauthorized",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="message", type="string", example="Unauthenticated.")
-     *         )
-     *     )
+     *      path="/get-products-by-title",
+     *      operationId="getProductsByTitle",
+     *      tags={"Products"},
+     *      summary="Get products by title",
+     *      description="Returns a list of products filtered by title.",
+     *      @OA\Parameter(
+     *          name="query_params",
+     *          in="query",
+     *          description="Title to filter products",
+     *          required=true,
+     *          @OA\Schema(
+     *              type="string"
+     *          )
+     *      ),
+     *      @OA\Response(
+     *          response=200,
+     *          description="Successful operation",
+     *          @OA\JsonContent(
+     *              type="object",
+     *              @OA\Property(property="message", type="string", example="Get Products Successfully"),
+     *              @OA\Property(property="results", type="array", @OA\Items(ref="#/components/schemas/ProductResource"))
+     *          )
+     *      ),
+     *      @OA\Response(
+     *          response=500,
+     *          description="Internal Server Error",
+     *          @OA\JsonContent(
+     *              type="object",
+     *              @OA\Property(property="message", type="string", example="Internal Server Error: Failed to fetch products by title."),
+     *              @OA\Property(property="error_code", type="integer", example=500)
+     *          )
+     *      )
      * )
      */
     public function getProductsByTitle(Request $request)
