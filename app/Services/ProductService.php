@@ -3,24 +3,17 @@
 namespace App\Services;
 
 use App\Interface\ProductRepositoryInterface;
+use Illuminate\Support\Facades\Cache;
 
 class ProductService
 {
+
     protected $productRepository;
     public function __construct(ProductRepositoryInterface $productRepository)
     {
         $this->productRepository = $productRepository;
     }
 
-    public function getAllProducts()
-    {
-        try {
-            $products = $this->productRepository->getAllProducts();
-        } catch (\Throwable $th) {
-            throw new \Exception($th->getMessage());
-        }
-        return $products;
-    }
 
     public function getProductById(int $id)
     {
@@ -34,21 +27,26 @@ class ProductService
 
     public function productTopSelling()
     {
-        try {
-            $products = $this->productRepository->productTopSelling();
-        } catch (\Throwable $th) {
-            throw new \Exception($th->getMessage());
-        }
+        $cacheKey = 'top_selling_products';
+        $ttlInSeconds = 60 * 60;
+
+        $products = Cache::remember($cacheKey, $ttlInSeconds, function () {
+
+            return $this->productRepository->productTopSelling();
+        });
+
         return $products;
     }
 
     public function productNewIn()
     {
-        try {
-            $products = $this->productRepository->productNewIn();
-        } catch (\Throwable $th) {
-            throw new \Exception($th->getMessage());
-        }
+        $cacheKey = 'new_in_products';
+        $ttlInSeconds = 60 * 60;
+        $products = Cache::remember($cacheKey, $ttlInSeconds, function () {
+
+            return $this->productRepository->productNewIn();
+        });
+
         return $products;
     }
 
@@ -64,21 +62,25 @@ class ProductService
 
     public function getFavoriteProducts(int $userId)
     {
-        try {
-            $products = $this->productRepository->getFavoriteProducts($userId);
-        } catch (\Throwable $th) {
-            throw new \Exception($th->getMessage());
-        }
+        $cacheKey = 'favorite_products_' . $userId;
+        $ttlInSeconds = 60 * 60;
+        $products = Cache::remember($cacheKey, $ttlInSeconds, function () use ($userId) {
+
+            return $this->productRepository->getFavoriteProducts($userId);
+        });
+
         return $products;
     }
 
     public function getProductsByIdCategory(int $categoryId)
     {
-        try {
-            $products = $this->productRepository->getProductsByIdCategory($categoryId);
-        } catch (\Throwable $th) {
-            throw new \Exception($th->getMessage());
-        }
+        $cacheKey = 'products_by_category_' . $categoryId;
+        $ttlInSeconds = 60 * 60;
+        $products = Cache::remember($cacheKey, $ttlInSeconds, function () use ($categoryId) {
+
+            return $this->productRepository->getProductsByIdCategory($categoryId);
+        });
+
         return $products;
     }
 

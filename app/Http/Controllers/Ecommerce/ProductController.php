@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers\Ecommerce;
 
+use App\Models\Product;
 use Illuminate\Http\Request;
+use App\Services\ProductService;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Cache;
 use App\Http\Resources\ProductResource;
-use App\Services\ProductService;
 
 class ProductController extends Controller
 {

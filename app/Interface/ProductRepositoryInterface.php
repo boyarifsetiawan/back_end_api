@@ -7,10 +7,6 @@ use Illuminate\Support\Collection;
 
 interface ProductRepositoryInterface
 {
-    /**
-     * @return Collection
-     */
-    public function getAllProducts(): Collection;
 
     /**
      * @param int $id

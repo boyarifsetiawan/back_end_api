@@ -10,14 +10,6 @@ use Illuminate\Support\Collection;
 
 class ProductRepositoryImpl implements ProductRepositoryInterface
 {
-
-    public function getAllProducts(): Collection
-    {
-        $products = Product::latest()->get();
-        $products->load(['category', 'images', 'colors', 'sizes']);
-        return $products;
-    }
-
     public function getProductById(int $productId): ?Product
     {
         $product = Product::find($productId);
@@ -30,7 +22,7 @@ class ProductRepositoryImpl implements ProductRepositoryInterface
     public function productTopSelling(): Collection
     {
         $products =  Product::where('sales_number', '>=', 500)
-            ->orderBy('sales_number', 'desc') // Urutkan dari tertinggi ke terendah
+            ->orderBy('sales_number', 'desc')->with(['category', 'images', 'colors', 'sizes']) // Urutkan dari tertinggi ke terendah
             ->get();
 
         $products->load(['category', 'images', 'colors', 'sizes']);
