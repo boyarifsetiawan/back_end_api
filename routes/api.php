@@ -61,7 +61,7 @@ Route::controller(AuthController::class)->group(function () {
 });
 
 // PORTO SECTION
-Route::middleware('auth:sanctum')->group(function () {
+Route::middleware(['auth:sanctum', 'api'])->group(function () {
     Route::get('/get-skills', [SkillController::class, 'getSkills']);
     Route::post('/create-skill', [SkillController::class, 'createSkill']);
     Route::post('/update-skill', [SkillController::class, 'updateSkill']);
