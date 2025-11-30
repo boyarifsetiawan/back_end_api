@@ -24,23 +24,45 @@ jobs:
           ssh -i ~/.ssh/id_rsa ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} << 'EOF'
           cd ${{ secrets.APP_DIR }}
 
-          echo "=== PULL LATEST ==="
-          git pull origin master
+          echo "=== START DEPLOY ==="
+
+          echo "=== SAVE CURRENT COMMIT ==="
+          LAST_COMMIT=$(git rev-parse HEAD)
+          echo "Current commit: \$LAST_COMMIT"
+
+          echo "=== RESET LOCAL CHANGES ==="
+          git reset --hard
+          git clean -fd
+
+          echo "=== FETCH & MERGE FORCED ==="
+          git fetch origin master
+
+          if ! git merge -s ours origin/master --ff-only; then
+            echo "Merge failed! Rolling back..."
+            git reset --hard \$LAST_COMMIT
+            exit 1
+          fi
 
           echo "=== COMPOSER INSTALL ==="
-          composer install --no-interaction --prefer-dist --optimize-autoloader
+          if ! composer install --no-interaction --prefer-dist --optimize-autoloader; then
+            echo "Composer failed! Rolling back..."
+            git reset --hard \$LAST_COMMIT
+            exit 1
+          fi
 
           echo "=== RUN MIGRATIONS ==="
-          php artisan migrate --force
+          if ! php artisan migrate --force; then
+            echo "Migration failed! Rolling back..."
+            git reset --hard \$LAST_COMMIT
+            exit 1
+          fi
 
-          echo "=== CLEAR CACHE ==="
+          echo "=== OPTIMIZING LARAVEL ==="
           php artisan optimize:clear
-
-          echo "=== RE-OPTIMIZE ==="
           php artisan optimize
 
           echo "=== RELOAD PHP-FPM ==="
           sudo systemctl reload php8.2-fpm
 
-          echo "=== DEPLOY DONE ==="
+          echo "=== DEPLOY SUCCESS ==="
           EOF
