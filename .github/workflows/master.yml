@@ -19,50 +19,50 @@ jobs:
           chmod 600 ~/.ssh/id_rsa
           ssh-keyscan -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
 
-      - name: Deploy app to VPS
+      - name: Deploy to VPS
         run: |
           ssh -i ~/.ssh/id_rsa ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} << 'EOF'
-          cd ${{ secrets.APP_DIR }}
 
           echo "=== START DEPLOY ==="
 
+          cd ${{ secrets.APP_DIR }}
+
           echo "=== SAVE CURRENT COMMIT ==="
           LAST_COMMIT=$(git rev-parse HEAD)
-          echo "Current commit: \$LAST_COMMIT"
+
+          echo "Current commit: $LAST_COMMIT"
 
           echo "=== RESET LOCAL CHANGES ==="
           git reset --hard
-          git clean -fd
 
           echo "=== FETCH & MERGE FORCED ==="
-          git fetch origin master
+          git fetch --all
 
-          if ! git merge -s ours origin/master --ff-only; then
-            echo "Merge failed! Rolling back..."
-            git reset --hard \$LAST_COMMIT
-            exit 1
+
+          git config user.email "deploy@server.local"
+          git config user.name "Deploy Bot"
+
+          if git merge origin/master --strategy-option theirs; then
+              echo "Merge successful!"
+          else
+              echo "Merge failed! Rolling back..."
+              git reset --hard "$LAST_COMMIT"
+              exit 1
           fi
 
           echo "=== COMPOSER INSTALL ==="
-          if ! composer install --no-interaction --prefer-dist --optimize-autoloader; then
-            echo "Composer failed! Rolling back..."
-            git reset --hard \$LAST_COMMIT
-            exit 1
-          fi
+          composer install --no-interaction --prefer-dist --optimize-autoloader
 
-          echo "=== RUN MIGRATIONS ==="
-          if ! php artisan migrate --force; then
-            echo "Migration failed! Rolling back..."
-            git reset --hard \$LAST_COMMIT
-            exit 1
-          fi
+          echo "=== MIGRATIONS ==="
+          php artisan migrate --force
 
-          echo "=== OPTIMIZING LARAVEL ==="
+          echo "=== OPTIMIZE ==="
           php artisan optimize:clear
           php artisan optimize
 
           echo "=== RELOAD PHP-FPM ==="
-          sudo systemctl reload php8.2-fpm
+          sudo /bin/systemctl reload php8.2-fpm
 
-          echo "=== DEPLOY SUCCESS ==="
+          echo "=== DEPLOY DONE ==="
+
           EOF
