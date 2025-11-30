@@ -33,6 +33,16 @@ class ProjectController extends Controller
         ], 200);
     }
 
+    public function getProjectDetail(Request $request)
+    {
+        $projectId = $request->query('query');
+        $project = $this->projects->with('skill')->find($projectId);
+        return response()->json([
+            'message' => 'Get project Detail Success',
+            'results' => new ProjectResource($project)
+        ], 200);
+    }
+
     public function getProjectsSkills()
     {
         $project = $this->projects->with('skill')->get();
@@ -58,6 +68,7 @@ class ProjectController extends Controller
             'skill_id' => ['required'],
             'name' => ['required', 'min:3'],
             'image' => ['required', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
+            'description' => ['nullable', 'string']
         ]);
 
         if ($request->hasFile('image')) {
@@ -66,7 +77,8 @@ class ProjectController extends Controller
                 'skill_id' => $request->skill_id,
                 'name' => $request->name,
                 'image' => $imagePath,
-                'project_url' => $request->project_url
+                'project_url' => $request->project_url,
+                'description' => $request->description
             ]);
 
             return response()->json([
@@ -122,12 +134,13 @@ class ProjectController extends Controller
     {
 
         $request->validate([
-            'skill_id' => ['required'],
-            'name' => ['required', 'min:3'],
+            'id'   => 'required|exists:projects,id',
+            'name' => 'required',
         ]);
 
         $projectId = $request->id;
-        $project = $this->projects->find($projectId);
+        $project = Project::findOrFail($projectId);
+        $image = $project->image;
 
         if ($request->hasFile('image')) {
             Storage::delete($project->image);
@@ -138,7 +151,8 @@ class ProjectController extends Controller
             'name' => $request->name,
             'skill_id' => $request->skill_id,
             'project_url' => $request->project_url,
-            'image' => $image
+            'description' => $request->description,
+            'image' => $image,
         ]);
 
         return response()->json([

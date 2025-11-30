@@ -80,6 +80,7 @@ Route::middleware(['auth:sanctum', 'api'])->group(function () {
     Route::post('/delete-profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 Route::get('/get-projects-skills', [ProjectController::class, 'getProjectsSkills']);
+Route::get('/get-project-detail', [ProjectController::class, 'getProjectDetail']);
 
 
 Route::prefix('multipurpose')->controller(UserController::class)->group(function () {

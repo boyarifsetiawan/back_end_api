@@ -103,18 +103,13 @@ class SkillController extends Controller
             'name' => 'required',
         ]);
 
-        // Ambil skill berdasarkan ID
         $skill = Skill::findOrFail($request->id);
 
-        // Default: pakai gambar lama
         $image = $skill->image;
 
-        // Jika user upload gambar baru
         if ($request->hasFile('image')) {
-            // Hapus gambar lama
             Storage::delete($skill->image);
 
-            // Simpan gambar baru
             $image = $request->file('image')->store('skills', 'public');
         }
 
