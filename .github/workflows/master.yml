@@ -21,7 +21,7 @@ jobs:
 
       - name: Deploy to VPS
         run: |
-          ssh -i ~/.ssh/id_rsa ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} << 'EOF'
+          ssh -i ~/.ssh/id_rsa ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} << EOF
 
           echo "=== START DEPLOY ==="
 
@@ -29,21 +29,20 @@ jobs:
 
           echo "=== SAVE CURRENT COMMIT ==="
           LAST_COMMIT=$(git rev-parse HEAD)
-
           echo "Current commit: $LAST_COMMIT"
 
-          echo "=== RESET LOCAL CHANGES ==="
+          echo "=== RESET LOCAL ==="
           git reset --hard
 
-          echo "=== FETCH & MERGE FORCED ==="
+          echo "=== CONFIGURE GIT IDENTITY ==="
+          git config user.name "Deploy Bot"
+          git.config user.email "deploy@server.local"
+
+          echo "=== FETCH & MERGE ==="
           git fetch --all
 
-
-          git config user.email "deploy@server.local"
-          git config user.name "Deploy Bot"
-
           if git merge origin/master --strategy-option theirs; then
-              echo "Merge successful!"
+              echo "Merge success!"
           else
               echo "Merge failed! Rolling back..."
               git reset --hard "$LAST_COMMIT"
@@ -63,6 +62,5 @@ jobs:
           echo "=== RELOAD PHP-FPM ==="
           sudo /bin/systemctl reload php8.2-fpm
 
-          echo "=== DEPLOY DONE ==="
-
+          echo "=== DEPLOY COMPLETE ==="
           EOF
