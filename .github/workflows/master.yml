@@ -9,6 +9,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+<<<<<<< Updated upstream
     - name: Checkout Repo
       uses: actions/checkout@v4
 
@@ -44,3 +45,40 @@ jobs:
 
         echo "=== DEPLOY DONE ==="
         EOF
+=======
+      - name: Checkout Repo
+        uses: actions/checkout@v4
+
+      - name: Install SSH Key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
+
+      - name: Deploy to VPS
+        run: |
+          ssh -i ~/.ssh/id_rsa ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} << 'EOF'
+          cd ${{ secrets.APP_DIR }}
+
+          echo "=== PULL LATEST ==="
+          git pull origin main
+
+          echo "=== COMPOSER INSTALL ==="
+          composer install --no-interaction --prefer-dist --optimize-autoloader
+
+          echo "=== RUN MIGRATIONS ==="
+          php artisan migrate --force
+
+          echo "=== CLEAR CACHE ==="
+          php artisan optimize:clear
+
+          echo "=== RE-OPTIMIZE ==="
+          php artisan optimize
+
+          echo "=== RELOAD PHP-FPM ==="
+          sudo systemctl reload php8.2-fpm
+
+          echo "=== DEPLOY DONE ==="
+          EOF
+>>>>>>> Stashed changes
