@@ -33,10 +33,11 @@ class ProjectController extends Controller
         ], 200);
     }
 
-    public function getProjectDetail(Request $request)
+    public function getDetailProject(Request $request)
     {
         $projectId = $request->query('query');
-        $project = $this->projects->with('skill')->find($projectId);
+        // dd($projectId);
+        $project = $this->projects->find($projectId);
         return response()->json([
             'message' => 'Get project Detail Success',
             'results' => new ProjectResource($project)
